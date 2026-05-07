@@ -23,7 +23,16 @@
     .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
 
     /* Achievements */
-    .ach-item { display:flex; align-items:center; gap:12px; background:#0f3d2a; margin:12px; padding:15px; border-radius:12px; }
+    .ach-item { display:flex; align-items:center; gap:12px; background:#0f3d2a; margin:12px; padding:15px; border-radius:12px; border:2px solid transparent; transition: background 0.4s, border-color 0.4s; }
+    .ach-item.unlocked { background:#14532d; border-color: var(--green); }
+    .ach-item .ach-body { flex:1; text-align:left; }
+    .ach-item .ach-body small { color:#aaa; }
+    .ach-item.unlocked .ach-body small { color:#cfe; }
+    .ach-check { font-size:22px; min-width:24px; text-align:right; color:var(--green); }
+
+    /* Toast banner */
+    .toast { position:fixed; top:20px; left:50%; transform: translate(-50%, -150%); background: var(--green); color:#052e16; padding:14px 22px; border-radius:9999px; font-weight:bold; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 2000; transition: transform 0.4s ease; max-width: 90%; text-align:center; }
+    .toast.show { transform: translate(-50%, 0); }
   </style>
   <script src="https://unpkg.com/localforage@1.10.0/dist/localforage.min.js"></script>
   <script>
@@ -34,6 +43,8 @@
     async function loadFlowers() {
       flowers = await db.getItem('flowers') || [];
       renderCollection();
+      // Sync the green/checkmark state for rows on cold start — silent so no toasts replay
+      checkAchievements({ silent: true });
     }
 
     async function saveFlower(photoBase64, aiResult) {
@@ -49,7 +60,7 @@
       flowers.unshift(entry);
       await db.setItem('flowers', flowers);
       renderCollection();
-      unlockAchievements();
+      checkAchievements();
     }
 
     function mockAI() {
@@ -74,25 +85,34 @@
 
     async function capturePhoto() {
       const video = document.getElementById('preview');
-      if (!video.srcObject) return alert("Camera not started yet");
+      if (!video.srcObject || !video.videoWidth) {
+        return alert("Camera isn't ready yet — give it a moment after tapping Start Scan");
+      }
 
+      // Pause BEFORE drawing — Safari sometimes white-screens if the stream
+      // is yanked while the video element is still actively painting frames.
+      video.pause();
+
+      // Capture the current frame to a canvas
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
-      // Stop camera
-      currentStream.getTracks().forEach(track => track.stop());
-      video.srcObject = null;
+      // Tear down the stream cleanly — order matters on iOS Safari:
+      // 1) stop tracks   2) detach srcObject   3) load() to reset element state
+      // Doing this in any other order is what causes the white-screen-needs-refresh bug.
+      stopCamera();
 
       const ai = mockAI();
       await saveFlower(photoBase64, ai);
       alert(`✅ Saved: ${ai.commonName}\n\n(Photo stored ONLY on your phone)`);
-      
-      // Return to scanner tab with preview ready again
-      switchTab(0);
-      setTimeout(startCamera, 300);
+
+      // Return to the idle landing screen — user taps Start Scan again for next one
+      document.getElementById('scan-active').style.display = 'none';
+      document.getElementById('scan-idle').style.display = 'flex';
     }
 
     function renderCollection() {
@@ -134,14 +154,49 @@
       if (modal) modal.remove();
     }
 
-    function unlockAchievements() {
-      const count = flowers.length;
-      if (count >= 1) {
-        document.getElementById('ach1').innerHTML = `<span style="font-size:28px;">🌼</span> First Bloom — Scan your first flower`;
+    const ACHIEVEMENTS = [
+      { id: 'first', name: 'First Bloom',     check: f => f.length >= 1  },
+      { id: 'five',  name: 'Daisy Chain',     check: f => f.length >= 5  },
+      { id: 'ten',   name: 'Regional Master', check: f => f.length >= 10 },
+    ];
+
+    async function checkAchievements({ silent = false } = {}) {
+      const seen = await db.getItem('unlocked') || [];
+      const newlyUnlocked = [];
+
+      ACHIEVEMENTS.forEach(a => {
+        const isUnlocked = a.check(flowers);
+        const row = document.getElementById('ach-' + a.id);
+        if (row) {
+          row.classList.toggle('unlocked', isUnlocked);
+          const check = row.querySelector('.ach-check');
+          if (check) check.textContent = isUnlocked ? '✅' : '';
+        }
+        if (isUnlocked && !seen.includes(a.id)) {
+          newlyUnlocked.push(a);
+          seen.push(a.id);
+        }
+      });
+
+      await db.setItem('unlocked', seen);
+
+      if (!silent) {
+        // Stagger toasts so multiple unlocks don't stack on top of each other
+        newlyUnlocked.forEach((a, i) => setTimeout(() => showToast(a), i * 600));
       }
-      if (count >= 5) {
-        document.getElementById('ach2').innerHTML = `<span style="font-size:28px;">🌸</span> Daisy Chain — Scan 5 different flowers`;
-      }
+    }
+
+    function showToast(a) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `🏆 Achievement Unlocked: <strong>${a.name}</strong>`;
+      document.body.appendChild(toast);
+      // Force reflow then add show class so the transition runs
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
     }
 
     function switchTab(n) {
@@ -151,7 +206,35 @@
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
       
       if (n === 1) loadFlowers();
-      if (n === 0) setTimeout(startCamera, 100); // start preview when scanner tab opens
+      // Scanner tab no longer auto-starts camera — user must tap Start Scan
+      // If user navigates away from scanner mid-scan, kill the stream
+      if (n !== 0 && currentStream) cancelScan();
+    }
+
+    function beginScan() {
+      document.getElementById('scan-idle').style.display = 'none';
+      document.getElementById('scan-active').style.display = 'flex';
+      startCamera();
+    }
+
+    function cancelScan() {
+      stopCamera();
+      document.getElementById('scan-active').style.display = 'none';
+      document.getElementById('scan-idle').style.display = 'flex';
+    }
+
+    function stopCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+        currentStream = null;
+      }
+      const video = document.getElementById('preview');
+      if (video) {
+        video.pause();
+        video.srcObject = null;
+        video.removeAttribute('src');
+        video.load();
+      }
     }
 
     window.onload = () => {
@@ -164,18 +247,29 @@
 
   <!-- TAB 0: Scanner -->
   <div id="tab0" class="tab active">
-    <div style="padding:20px; text-align:center; height:100vh; display:flex; flex-direction:column;">
-      <h1 style="color:var(--green);">🌸 FlowerDex</h1>
-      <p>Point camera at any flower — AI identifies offline</p>
-      
-      <video id="preview" style="width:100%; max-height:420px; background:#000; border-radius:16px; margin:20px 0;" autoplay playsinline></video>
-      
-      <button onclick="capturePhoto()">📸 CAPTURE PHOTO</button>
-      
-      <div class="privacy">
-        🔒 Photos &amp; data stay 100% on your phone only.<br>
-        Nothing is ever sent to GitHub or any server.
+    <!-- IDLE STATE: pre-scan landing -->
+    <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column; justify-content:space-between;">
+      <div style="margin-top:60px;">
+        <div style="font-size:72px; line-height:1;">🌸</div>
+        <h1 style="color:var(--green); margin:12px 0 4px;">FlowerDex</h1>
+        <p style="color:#cfe; max-width:280px; margin:0 auto;">Point your camera at any flower — AI identifies it for your collection.</p>
       </div>
+      <div>
+        <button onclick="beginScan()">📸 Start Scan</button>
+        <div class="privacy">
+          🔒 Photos &amp; data stay 100% on your phone only.<br>
+          Nothing is ever sent to GitHub or any server.
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE STATE: camera + capture -->
+    <div id="scan-active" style="display:none; padding:20px; text-align:center; min-height:100vh; flex-direction:column;">
+      <h1 style="color:var(--green); margin:0 0 10px;">🌸 FlowerDex</h1>
+      <p style="margin:0 0 10px; color:#cfe;">Frame the flower and tap capture</p>
+      <video id="preview" style="width:100%; max-height:420px; background:#000; border-radius:16px; margin:10px 0;" playsinline muted></video>
+      <button onclick="capturePhoto()">📸 CAPTURE PHOTO</button>
+      <button onclick="cancelScan()" style="background:transparent; color:#aaa; border:1px solid #444;">Cancel</button>
     </div>
   </div>
 
@@ -188,9 +282,21 @@
   <!-- TAB 2: Achievements -->
   <div id="tab2" class="tab">
     <h2 style="padding:20px; color:var(--green);">Achievements</h2>
-    <div id="ach1" class="ach-item">🌼 First Bloom — Scan your first flower</div>
-    <div id="ach2" class="ach-item">🌸 Daisy Chain — Scan 5 different flowers</div>
-    <div class="ach-item"><span style="font-size:28px;">🏆</span> Regional Master — Collect 10 flowers in one region</div>
+    <div id="ach-first" class="ach-item">
+      <span style="font-size:28px;">🌼</span>
+      <div class="ach-body"><strong>First Bloom</strong><br><small>Scan your first flower</small></div>
+      <span class="ach-check"></span>
+    </div>
+    <div id="ach-five" class="ach-item">
+      <span style="font-size:28px;">🌸</span>
+      <div class="ach-body"><strong>Daisy Chain</strong><br><small>Scan 5 different flowers</small></div>
+      <span class="ach-check"></span>
+    </div>
+    <div id="ach-ten" class="ach-item">
+      <span style="font-size:28px;">🏆</span>
+      <div class="ach-body"><strong>Regional Master</strong><br><small>Collect 10 flowers total</small></div>
+      <span class="ach-check"></span>
+    </div>
   </div>
 
   <!-- TAB 3: Chat -->
