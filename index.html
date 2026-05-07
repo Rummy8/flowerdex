@@ -27,42 +27,25 @@
     }
 
     async function saveFlower(photoBase64, aiResult, lat, lon) {
-      const entry = {
-        id: Date.now(),
-        photo: photoBase64,
-        scientific: aiResult.scientificName,
-        common: aiResult.commonName,
-        family: aiResult.family,
-        tidbit: aiResult.tidbit,
-        lat: lat,
-        lon: lon,
-        timestamp: new Date().toISOString(),
-        region: "Northeast US"
-      };
+      const entry = { id: Date.now(), photo: photoBase64, scientific: aiResult.scientificName, common: aiResult.commonName, family: aiResult.family, tidbit: aiResult.tidbit, lat, lon, timestamp: new Date().toISOString(), region: "Northeast US" };
       flowers.unshift(entry);
       await db.setItem('flowers', flowers);
       renderCollection();
       unlockAchievements();
     }
 
-    function mockAI() {
-      return {
-        scientificName: "Taraxacum officinale",
-        commonName: "Dandelion",
-        family: "Asteraceae",
-        tidbit: "Edible & medicinal — high in vitamins. Tea aids digestion. Safe to touch."
-      };
+    // === NEXT ITERATION: This will become real offline VLM (WebLLM + SmolVLM / Qwen2.5-VL style) ===
+    function mockAI() {  // ← Replace this function in the next message once you confirm the tabs work
+      return { scientificName: "Taraxacum officinale", commonName: "Dandelion", family: "Asteraceae", tidbit: "Edible & medicinal — high in vitamins A/C/K. Tea helps digestion. Safe to touch." };
     }
 
     async function takePhoto() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         const video = document.createElement('video');
-        video.srcObject = stream;
-        await video.play();
+        video.srcObject = stream; await video.play();
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
         const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
         stream.getTracks().forEach(t => t.stop());
@@ -70,7 +53,7 @@
         const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
         const ai = mockAI();
         await saveFlower(photoBase64, ai, pos.coords.latitude, pos.coords.longitude);
-        alert(`Saved: ${ai.commonName}`);
+        alert(`✅ Saved: ${ai.commonName}`);
       } catch(e) { alert("Camera/GPS error — " + e.message); }
     }
 
@@ -89,8 +72,8 @@
 
     function unlockAchievements() {
       const count = flowers.length;
-      if (count >= 1) document.getElementById('ach1').textContent = 'First Bloom ✓';
-      if (count >= 5) document.getElementById('ach2').textContent = 'Daisy Chain ✓ (5 flowers)';
+      if (count >= 1) document.getElementById('ach1').innerHTML = '🌼 First Bloom ✓';
+      if (count >= 5) document.getElementById('ach2').innerHTML = '🌸 Daisy Chain ✓ (5 flowers)';
     }
 
     function switchTab(n) {
@@ -112,7 +95,7 @@
   <!-- TAB 0: Scanner -->
   <div id="tab0" class="tab active">
     <div style="padding:20px; text-align:center; height:100vh; display:flex; flex-direction:column; justify-content:center;">
-      <h1 style="color:var(--green);">🌸 FlowerDex Scanner</h1>
+      <h1 style="color:var(--green);">🌸 FlowerDex</h1>
       <p>Point camera at any flower — AI identifies offline</p>
       <button id="scanBtn">SCAN FLOWER NOW</button>
       <p style="margin-top:30px; font-size:14px;">Photo + GPS + time saved automatically</p>
@@ -139,9 +122,9 @@
   <div id="tab3" class="tab">
     <h2 style="padding:20px; color:var(--green);">Chat with Botanist AI</h2>
     <div class="card">
-      <p>Ask anything about your scans (fully offline VLM coming next iteration)</p>
-      <textarea style="width:90%; height:200px; background:#052e16; color:white; border:2px solid #4ade80; border-radius:12px; padding:15px;" placeholder="What’s the medical use of this flower?"></textarea>
-      <button>Send to AI</button>
+      <p>Full offline VLM (Ollama-style) coming in next update</p>
+      <textarea style="width:90%; height:200px; background:#052e16; color:white; border:2px solid #4ade80; border-radius:12px; padding:15px;" placeholder="Ask anything about your scans..."></textarea>
+      <button onclick="alert('Chat tab ready — real model loads next iteration')">Send to AI</button>
     </div>
   </div>
 
