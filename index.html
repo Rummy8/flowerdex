@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>FlowerDex</title>
   <style>
     :root { --green: #4ade80; }
@@ -13,9 +16,9 @@
     .tab-btn { flex:1; padding:15px; text-align:center; color:white; }
     .tab-btn.active { background:#4ade80; color:#052e16; }
     
-    /* Scanner */
+    /* Scanner - smaller circle with just flower emoji */
     .scanner-center { height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .scan-circle { width:220px; height:220px; background:#4ade80; color:#052e16; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:bold; box-shadow:0 0 30px #4ade80; cursor:pointer; }
+    .scan-circle { width:160px; height:160px; background:#4ade80; color:#052e16; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:72px; box-shadow:0 0 30px #4ade80; cursor:pointer; }
     
     /* Collection */
     .collection-card { background:#0f3d2a; margin:12px 15px; border-radius:12px; padding:12px; display:flex; align-items:center; gap:15px; cursor:pointer; }
@@ -74,15 +77,15 @@
       };
     }
 
-    // Scanner - big circle opens full camera modal
+    // Scanner - small circle with just flower emoji
     async function openCamera() {
       const modal = document.createElement('div');
       modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;flex-direction:column;';
       modal.innerHTML = `
-        <div style="padding:15px;color:white;text-align:center;background:#052e16;">Point at flower then tap CAPTURE</div>
+        <div style="padding:15px;color:white;text-align:center;background:#052e16;">Point camera at flower</div>
         <video id="camera-preview" style="flex:1;width:100%;background:#111;" autoplay playsinline></video>
         <div style="padding:20px;background:#052e16;text-align:center;">
-          <button onclick="captureFromModal()" style="width:80px;height:80px;border-radius:50%;background:#4ade80;color:#052e16;font-size:14px;">📸 CAPTURE</button>
+          <button onclick="captureFromModal()" style="width:80px;height:80px;border-radius:50%;background:#4ade80;color:#052e16;font-size:32px;">📸</button>
         </div>
       `;
       document.body.appendChild(modal);
@@ -102,13 +105,16 @@
       const video = document.querySelector('#camera-preview');
       if (!video || !video.srcObject) return;
       
+      // Fix for white screen on Safari
+      await new Promise(resolve => setTimeout(resolve, 100)); // small delay for Safari
+      if (video.videoWidth === 0) return alert("Camera not ready — try again");
+      
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
       const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
       
-      // Stop stream and remove modal
       if (currentStream) currentStream.getTracks().forEach(track => track.stop());
       const modal = video.parentElement.parentElement;
       modal.remove();
@@ -121,7 +127,7 @@
     function renderCollection() {
       const container = document.getElementById('collection');
       container.innerHTML = flowers.length === 0 
-        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the big green circle to scan your first specimen</p>`
+        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the small green circle to scan</p>`
         : flowers.map(f => `
           <div class="collection-card" onclick="showDetail(${f.id})">
             <img src="${f.photo}" class="small-thumb">
@@ -160,7 +166,6 @@
 
     function checkAndUnlockAchievements() {
       const count = flowers.length;
-
       if (count >= 1 && !document.getElementById('ach1').classList.contains('unlocked')) {
         const ach1 = document.getElementById('ach1');
         ach1.classList.add('unlocked');
@@ -204,13 +209,13 @@
 </head>
 <body>
 
-  <!-- TAB 0: Scanner -->
+  <!-- TAB 0: Scanner - small circle with just flower emoji -->
   <div id="tab0" class="tab active">
     <div class="scanner-center">
       <h1 style="color:var(--green);">🌸 FlowerDex</h1>
-      <p style="margin-bottom:40px;">Tap the circle to scan a flower</p>
-      <div class="scan-circle" onclick="openCamera()">SCAN<br>FLOWER</div>
-      <div class="privacy" style="margin-top:60px;">
+      <p style="margin-bottom:60px;">Tap the circle to scan a flower</p>
+      <div class="scan-circle" onclick="openCamera()">🌸</div>
+      <div class="privacy" style="margin-top:80px;">
         🔒 Everything stays 100% on your phone only
       </div>
     </div>
