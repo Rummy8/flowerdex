@@ -23,12 +23,14 @@
     .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
 
     /* Achievements */
-    .ach-item { display:flex; align-items:center; gap:12px; background:#0f3d2a; margin:12px; padding:15px; border-radius:12px; border:2px solid transparent; transition: background 0.4s, border-color 0.4s; }
-    .ach-item.unlocked { background:#14532d; border-color: var(--green); }
+    .ach-item { display:flex; align-items:center; gap:12px; background:#0f3d2a; margin:12px; padding:15px; border-radius:12px; transition: background 0.4s, color 0.4s; }
+    .ach-item.unlocked { background:#0a3d1f; color: var(--green); }
+    .ach-item.unlocked .ach-body strong { color: var(--green); }
     .ach-item .ach-body { flex:1; text-align:left; }
     .ach-item .ach-body small { color:#aaa; }
-    .ach-item.unlocked .ach-body small { color:#cfe; }
+    .ach-item.unlocked .ach-body small { color:#86efac; }
     .ach-check { font-size:22px; min-width:24px; text-align:right; color:var(--green); }
+    .ach-section { padding: 18px 20px 4px; color:#86efac; font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
 
     /* Toast banner */
     .toast { position:fixed; top:20px; left:50%; transform: translate(-50%, -150%); background: var(--green); color:#052e16; padding:14px 22px; border-radius:9999px; font-weight:bold; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 2000; transition: transform 0.4s ease; max-width: 90%; text-align:center; }
@@ -40,14 +42,41 @@
     const db = localforage.createInstance({ name: "flowerdex" });
     let currentStream = null;
 
+    function renderAchievements() {
+      const list = document.getElementById('achievements-list');
+      if (!list) return;
+      const sections = {
+        collection: 'Collection',
+        botany:     'Botany',
+        region:     'Region',
+      };
+      let html = '';
+      let lastSection = null;
+      ACHIEVEMENTS.forEach(a => {
+        if (a.section !== lastSection) {
+          html += `<div class="ach-section">${sections[a.section] || a.section}</div>`;
+          lastSection = a.section;
+        }
+        html += `
+          <div id="ach-${a.id}" class="ach-item">
+            <span style="font-size:28px;">${a.icon || '🏅'}</span>
+            <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
+            <span class="ach-check"></span>
+          </div>`;
+      });
+      list.innerHTML = html;
+    }
+
     async function loadFlowers() {
       flowers = await db.getItem('flowers') || [];
       renderCollection();
+      renderAchievements();
       // Sync the green/checkmark state for rows on cold start — silent so no toasts replay
       checkAchievements({ silent: true });
     }
 
     async function saveFlower(photoBase64, aiResult) {
+      const location = await getLocation(); // null if user denied or no GPS
       const entry = {
         id: Date.now(),
         photo: photoBase64,
@@ -55,6 +84,7 @@
         common: aiResult.commonName,
         family: aiResult.family,
         tidbit: aiResult.tidbit,
+        location, // { lat, lng } or null
         timestamp: new Date().toISOString()
       };
       flowers.unshift(entry);
@@ -108,7 +138,7 @@
 
       const ai = mockAI();
       await saveFlower(photoBase64, ai);
-      alert(`✅ Saved: ${ai.commonName}\n\n(Photo stored ONLY on your phone)`);
+      showToast(`✨ Added <strong>${ai.commonName}</strong> to your collection`);
 
       // Return to the idle landing screen — user taps Start Scan again for next one
       document.getElementById('scan-active').style.display = 'none';
@@ -154,10 +184,69 @@
       if (modal) modal.remove();
     }
 
+    // --- Geolocation helpers (silent — denied permission just means no region achievements) ---
+    function getLocation() {
+      if (!navigator.geolocation) return Promise.resolve(null);
+      return new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          ()  => resolve(null),
+          { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
+        );
+      });
+    }
+
+    function distanceKm(a, b) {
+      const R = 6371;
+      const toRad = d => d * Math.PI / 180;
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+      const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+      const x = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(x));
+    }
+
+    // Bucket scans into "places" — any two scans within 1km count as the same place
+    function uniquePlaces(flowers, radiusKm = 1) {
+      const located = flowers.filter(f => f.location);
+      const places = [];
+      for (const f of located) {
+        if (!places.some(p => distanceKm(p, f.location) <= radiusKm)) {
+          places.push(f.location);
+        }
+      }
+      return places;
+    }
+
     const ACHIEVEMENTS = [
-      { id: 'first', name: 'First Bloom',     check: f => f.length >= 1  },
-      { id: 'five',  name: 'Daisy Chain',     check: f => f.length >= 5  },
-      { id: 'ten',   name: 'Regional Master', check: f => f.length >= 10 },
+      // --- Collection (count-based) ---
+      { id: 'first',     section: 'collection', icon: '🌼', name: 'First Bloom',           desc: 'Scan your first flower',                check: f => f.length >= 1  },
+      { id: 'five',      section: 'collection', icon: '🌸', name: 'Daisy Chain',           desc: 'Scan 5 different flowers',              check: f => f.length >= 5  },
+      { id: 'ten',       section: 'collection', icon: '🏆', name: "Botanist's Apprentice", desc: 'Reach 10 flowers in your collection',   check: f => f.length >= 10 },
+      { id: 'twentyfive',section: 'collection', icon: '📚', name: 'Field Researcher',      desc: 'Reach 25 flowers in your collection',   check: f => f.length >= 25 },
+
+      // --- Botany (family-based — uses the family field returned by the AI) ---
+      { id: 'family3', section: 'botany', icon: '🌿', name: 'Family Tree',  desc: 'Scan flowers from 3 different families', check: f => new Set(f.map(x => x.family).filter(Boolean)).size >= 3 },
+      { id: 'family5', section: 'botany', icon: '🧬', name: 'Taxonomy Buff', desc: 'Scan flowers from 5 different families', check: f => new Set(f.map(x => x.family).filter(Boolean)).size >= 5 },
+      { id: 'aster5',  section: 'botany', icon: '☀️', name: 'Sun Catcher',  desc: 'Scan 5 flowers from the daisy family (Asteraceae)', check: f => f.filter(x => x.family === 'Asteraceae').length >= 5 },
+
+      // --- Region (geolocation-based — silent if location permission denied) ---
+      { id: 'homeTurf',  section: 'region', icon: '🏡', name: 'Home Turf',          desc: 'Scan 5 flowers within 1km of one spot', check: f => {
+        const located = f.filter(x => x.location);
+        return located.some(anchor =>
+          located.filter(other => distanceKm(anchor.location, other.location) <= 1).length >= 5
+        );
+      }},
+      { id: 'roamer',    section: 'region', icon: '🗺️', name: 'Roaming Naturalist', desc: 'Scan flowers in 3 distinct locations',  check: f => uniquePlaces(f, 1).length >= 3 },
+      { id: 'wanderer',  section: 'region', icon: '🌍', name: 'Wanderer',           desc: 'Scan two flowers more than 50km apart', check: f => {
+        const located = f.filter(x => x.location);
+        for (let i = 0; i < located.length; i++) {
+          for (let j = i+1; j < located.length; j++) {
+            if (distanceKm(located[i].location, located[j].location) > 50) return true;
+          }
+        }
+        return false;
+      }},
     ];
 
     async function checkAchievements({ silent = false } = {}) {
@@ -182,14 +271,15 @@
 
       if (!silent) {
         // Stagger toasts so multiple unlocks don't stack on top of each other
-        newlyUnlocked.forEach((a, i) => setTimeout(() => showToast(a), i * 600));
+        newlyUnlocked.forEach((a, i) => setTimeout(() =>
+          showToast(`🏆 Achievement Unlocked: <strong>${a.name}</strong>`), i * 600));
       }
     }
 
-    function showToast(a) {
+    function showToast(message) {
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `🏆 Achievement Unlocked: <strong>${a.name}</strong>`;
+      toast.innerHTML = message;
       document.body.appendChild(toast);
       // Force reflow then add show class so the transition runs
       requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
@@ -248,18 +338,16 @@
   <!-- TAB 0: Scanner -->
   <div id="tab0" class="tab active">
     <!-- IDLE STATE: pre-scan landing -->
-    <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column; justify-content:space-between;">
-      <div style="margin-top:60px;">
+    <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column;">
+      <div style="margin-top:40px;">
         <div style="font-size:72px; line-height:1;">🌸</div>
         <h1 style="color:var(--green); margin:12px 0 4px;">FlowerDex</h1>
-        <p style="color:#cfe; max-width:280px; margin:0 auto;">Point your camera at any flower — AI identifies it for your collection.</p>
-      </div>
-      <div>
+        <p style="color:#cfe; max-width:280px; margin:0 auto 24px;">Point your camera at any flower — AI identifies it for your collection.</p>
         <button onclick="beginScan()">📸 Start Scan</button>
-        <div class="privacy">
-          🔒 Photos &amp; data stay 100% on your phone only.<br>
-          Nothing is ever sent to GitHub or any server.
-        </div>
+      </div>
+      <div class="privacy" style="margin-top:auto;">
+        🔒 Photos &amp; data stay 100% on your phone only.<br>
+        Nothing is ever sent to GitHub or any server.
       </div>
     </div>
 
@@ -281,22 +369,8 @@
 
   <!-- TAB 2: Achievements -->
   <div id="tab2" class="tab">
-    <h2 style="padding:20px; color:var(--green);">Achievements</h2>
-    <div id="ach-first" class="ach-item">
-      <span style="font-size:28px;">🌼</span>
-      <div class="ach-body"><strong>First Bloom</strong><br><small>Scan your first flower</small></div>
-      <span class="ach-check"></span>
-    </div>
-    <div id="ach-five" class="ach-item">
-      <span style="font-size:28px;">🌸</span>
-      <div class="ach-body"><strong>Daisy Chain</strong><br><small>Scan 5 different flowers</small></div>
-      <span class="ach-check"></span>
-    </div>
-    <div id="ach-ten" class="ach-item">
-      <span style="font-size:28px;">🏆</span>
-      <div class="ach-body"><strong>Regional Master</strong><br><small>Collect 10 flowers total</small></div>
-      <span class="ach-check"></span>
-    </div>
+    <h2 style="padding:20px 20px 0; color:var(--green);">Achievements</h2>
+    <div id="achievements-list"></div>
   </div>
 
   <!-- TAB 3: Chat -->
