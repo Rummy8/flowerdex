@@ -16,7 +16,7 @@
     .thumb { width:100%; height:140px; object-fit:cover; border-radius:12px; }
     button { background:#4ade80; color:#052e16; border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; }
     .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:#0a2218; }
-    
+
     /* Modal */
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
     .modal-content { background:#0f3d2a; max-width:90%; border-radius:16px; padding:20px; text-align:center; }
@@ -71,12 +71,11 @@
       flowers = await db.getItem('flowers') || [];
       renderCollection();
       renderAchievements();
-      // Sync the green/checkmark state for rows on cold start — silent so no toasts replay
       checkAchievements({ silent: true });
     }
 
     async function saveFlower(photoBase64, aiResult) {
-      const location = await getLocation(); // null if user denied or no GPS
+      const location = await getLocation();
       const entry = {
         id: Date.now(),
         photo: photoBase64,
@@ -84,7 +83,7 @@
         common: aiResult.commonName,
         family: aiResult.family,
         tidbit: aiResult.tidbit,
-        location, // { lat, lng } or null
+        location,
         timestamp: new Date().toISOString()
       };
       flowers.unshift(entry);
@@ -119,11 +118,8 @@
         return alert("Camera isn't ready yet — give it a moment after tapping Start Scan");
       }
 
-      // Pause BEFORE drawing — Safari sometimes white-screens if the stream
-      // is yanked while the video element is still actively painting frames.
       video.pause();
 
-      // Capture the current frame to a canvas
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -131,23 +127,19 @@
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
-      // Tear down the stream cleanly — order matters on iOS Safari:
-      // 1) stop tracks   2) detach srcObject   3) load() to reset element state
-      // Doing this in any other order is what causes the white-screen-needs-refresh bug.
       stopCamera();
 
       const ai = mockAI();
       await saveFlower(photoBase64, ai);
       showToast(`✨ Added <strong>${ai.commonName}</strong> to your collection`);
 
-      // Return to the idle landing screen — user taps Start Scan again for next one
       document.getElementById('scan-active').style.display = 'none';
       document.getElementById('scan-idle').style.display = 'flex';
     }
 
     function renderCollection() {
       const container = document.getElementById('collection');
-      container.innerHTML = flowers.length === 0 
+      container.innerHTML = flowers.length === 0
         ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
         : flowers.map(f => `
           <div class="card" onclick="showDetail(${f.id})">
@@ -161,7 +153,7 @@
     function showDetail(id) {
       const flower = flowers.find(f => f.id === id);
       if (!flower) return;
-      
+
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
           <div class="modal-content" onclick="event.stopImmediatePropagation()">
@@ -184,7 +176,6 @@
       if (modal) modal.remove();
     }
 
-    // --- Geolocation helpers (silent — denied permission just means no region achievements) ---
     function getLocation() {
       if (!navigator.geolocation) return Promise.resolve(null);
       return new Promise(resolve => {
@@ -206,7 +197,6 @@
       return 2 * R * Math.asin(Math.sqrt(x));
     }
 
-    // Bucket scans into "places" — any two scans within 1km count as the same place
     function uniquePlaces(flowers, radiusKm = 1) {
       const located = flowers.filter(f => f.location);
       const places = [];
@@ -219,18 +209,15 @@
     }
 
     const ACHIEVEMENTS = [
-      // --- Collection (count-based) ---
       { id: 'first',     section: 'collection', icon: '🌼', name: 'First Bloom',           desc: 'Scan your first flower',                check: f => f.length >= 1  },
       { id: 'five',      section: 'collection', icon: '🌸', name: 'Daisy Chain',           desc: 'Scan 5 different flowers',              check: f => f.length >= 5  },
       { id: 'ten',       section: 'collection', icon: '🏆', name: "Botanist's Apprentice", desc: 'Reach 10 flowers in your collection',   check: f => f.length >= 10 },
       { id: 'twentyfive',section: 'collection', icon: '📚', name: 'Field Researcher',      desc: 'Reach 25 flowers in your collection',   check: f => f.length >= 25 },
 
-      // --- Botany (family-based — uses the family field returned by the AI) ---
       { id: 'family3', section: 'botany', icon: '🌿', name: 'Family Tree',  desc: 'Scan flowers from 3 different families', check: f => new Set(f.map(x => x.family).filter(Boolean)).size >= 3 },
       { id: 'family5', section: 'botany', icon: '🧬', name: 'Taxonomy Buff', desc: 'Scan flowers from 5 different families', check: f => new Set(f.map(x => x.family).filter(Boolean)).size >= 5 },
       { id: 'aster5',  section: 'botany', icon: '☀️', name: 'Sun Catcher',  desc: 'Scan 5 flowers from the daisy family (Asteraceae)', check: f => f.filter(x => x.family === 'Asteraceae').length >= 5 },
 
-      // --- Region (geolocation-based — silent if location permission denied) ---
       { id: 'homeTurf',  section: 'region', icon: '🏡', name: 'Home Turf',          desc: 'Scan 5 flowers within 1km of one spot', check: f => {
         const located = f.filter(x => x.location);
         return located.some(anchor =>
@@ -270,7 +257,6 @@
       await db.setItem('unlocked', seen);
 
       if (!silent) {
-        // Stagger toasts so multiple unlocks don't stack on top of each other
         newlyUnlocked.forEach((a, i) => setTimeout(() =>
           showToast(`🏆 Achievement Unlocked: <strong>${a.name}</strong>`), i * 600));
       }
@@ -281,7 +267,6 @@
       toast.className = 'toast';
       toast.innerHTML = message;
       document.body.appendChild(toast);
-      // Force reflow then add show class so the transition runs
       requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
       setTimeout(() => {
         toast.classList.remove('show');
@@ -294,10 +279,8 @@
       document.getElementById('tab'+n).classList.add('active');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
-      
+
       if (n === 1) loadFlowers();
-      // Scanner tab no longer auto-starts camera — user must tap Start Scan
-      // If user navigates away from scanner mid-scan, kill the stream
       if (n !== 0 && currentStream) cancelScan();
     }
 
@@ -329,7 +312,6 @@
 
     window.onload = () => {
       loadFlowers();
-      // Scanner preview will start when tab is selected
     };
   </script>
 </head>
