@@ -12,8 +12,12 @@
     .tabs { position:fixed; bottom:0; width:100%; display:flex; background:#0f3d2a; }
     .tab-btn { flex:1; padding:15px; text-align:center; color:white; }
     .tab-btn.active { background:#4ade80; color:#052e16; }
-    .card { background:#0f3d2a; margin:15px; border-radius:12px; padding:12px; cursor:pointer; }
-    .thumb { width:100%; height:140px; object-fit:cover; border-radius:12px; }
+    .card { background:#0f3d2a; margin:15px; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:14px; }
+    .card-text { flex:1; min-width:0; text-align:left; }
+    .card-text h3 { margin:0 0 4px; font-size:18px; }
+    .card-text .sci { display:block; font-style:italic; color:#cfe; font-size:14px; margin-bottom:6px; }
+    .card-text .date { color:#aaa; font-size:12px; }
+    .thumb { width:96px; height:96px; object-fit:cover; border-radius:10px; flex-shrink:0; }
     button { background:#4ade80; color:#052e16; border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; }
     .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:#0a2218; }
 
@@ -137,21 +141,21 @@
       document.getElementById('scan-idle').style.display = 'flex';
     }
 
-function renderCollection() {
-  const container = document.getElementById('collection');
-  container.innerHTML = flowers.length === 0 
-    ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
-    : flowers.map(f => `
-      <div class="card" onclick="showDetail(${f.id})">
-        <div class="card-text">
-          <h3>${f.common}</h3>
-          <span class="sci">${f.scientific}</span>
-          <span class="date">${new Date(f.timestamp).toLocaleDateString()}</span>
-        </div>
-        <img src="${f.photo}" class="thumb">
-      </div>
-    `).join('');
-}
+    function renderCollection() {
+      const container = document.getElementById('collection');
+      container.innerHTML = flowers.length === 0
+        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
+        : flowers.map(f => `
+          <div class="card" onclick="showDetail(${f.id})">
+            <div class="card-text">
+              <h3>${f.common}</h3>
+              <span class="sci">${f.scientific}</span>
+              <span class="date">${new Date(f.timestamp).toLocaleDateString()}</span>
+            </div>
+            <img src="${f.photo}" class="thumb">
+          </div>
+        `).join('');
+    }
 
     function showDetail(id) {
       const flower = flowers.find(f => f.id === id);
