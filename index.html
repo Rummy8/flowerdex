@@ -137,18 +137,21 @@
       document.getElementById('scan-idle').style.display = 'flex';
     }
 
-    function renderCollection() {
-      const container = document.getElementById('collection');
-      container.innerHTML = flowers.length === 0
-        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
-        : flowers.map(f => `
-          <div class="card" onclick="showDetail(${f.id})">
-            <img src="${f.photo}" class="thumb">
-            <h3 style="margin:8px 0 4px;">${f.common}</h3>
-            <small>${new Date(f.timestamp).toLocaleDateString()}</small>
-          </div>
-        `).join('');
-    }
+function renderCollection() {
+  const container = document.getElementById('collection');
+  container.innerHTML = flowers.length === 0 
+    ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
+    : flowers.map(f => `
+      <div class="card" onclick="showDetail(${f.id})">
+        <div class="card-text">
+          <h3>${f.common}</h3>
+          <span class="sci">${f.scientific}</span>
+          <span class="date">${new Date(f.timestamp).toLocaleDateString()}</span>
+        </div>
+        <img src="${f.photo}" class="thumb">
+      </div>
+    `).join('');
+}
 
     function showDetail(id) {
       const flower = flowers.find(f => f.id === id);
