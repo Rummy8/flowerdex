@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FlowerDex</title>
   <style>
-    :root { --green: #4ade80; --dark: #052e16; --panel: #0f3d2a; --panel-deep: #0a2218; }
+    :root { --green: #4ade80; --dark: #052e16; --panel: #0f3d2a; --panel-deep: #0a2218; --muted: #86efac; }
     body { margin:0; font-family: system-ui; background:var(--dark); color:white; }
-    .tab { display:none; }
+    .tab { display:none; padding-bottom:70px; }
     .tab.active { display:block; }
     .tabs { position:fixed; bottom:0; width:100%; display:flex; background:var(--panel); z-index:800; }
-    .tab-btn { flex:1; padding:15px; text-align:center; color:white; cursor:pointer; }
+    .tab-btn { flex:1; padding:15px; text-align:center; color:white; cursor:pointer; font-size:14px; }
     .tab-btn.active { background:var(--green); color:var(--dark); }
     button { background:var(--green); color:var(--dark); border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; cursor:pointer; }
     .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:var(--panel-deep); }
@@ -24,9 +24,18 @@
     .thumb { width:96px; height:96px; object-fit:cover; border-radius:10px; flex-shrink:0; }
 
     /* Detail modal */
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
-    .modal-content { background:var(--panel); max-width:90%; border-radius:16px; padding:20px; text-align:center; }
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; }
+    .modal-content { background:var(--panel); max-width:90%; width:100%; max-width:480px; border-radius:16px; padding:20px; text-align:center; max-height:90vh; overflow-y:auto; box-sizing:border-box; }
     .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:9999px; font-size:12px; margin:2px; font-weight:bold; }
+    .badge.biome { background:#1a4d2e; color:var(--green); }
+    .badge.family { background:#1a3d4d; color:#7dd3fc; }
+    .badge.rarity-common { background:#374151; color:#d1d5db; }
+    .badge.rarity-uncommon { background:#5b4519; color:#fbbf24; }
+    .badge.rarity-rare { background:#581c87; color:#e9d5ff; }
+    .badge.edible { background:#14532d; color:var(--green); }
+    .badge.toxic { background:#7f1d1d; color:#fca5a5; }
+    .badge.native { background:#155e75; color:#67e8f9; }
 
     /* Achievements */
     .ach-item { display:flex; align-items:center; gap:12px; background:var(--panel); margin:12px; padding:15px; border-radius:12px; transition: background 0.4s, color 0.4s; }
@@ -34,16 +43,42 @@
     .ach-item.unlocked .ach-body strong { color:var(--green); }
     .ach-item .ach-body { flex:1; text-align:left; }
     .ach-item .ach-body small { color:#aaa; }
-    .ach-item.unlocked .ach-body small { color:#86efac; }
+    .ach-item.unlocked .ach-body small { color:var(--muted); }
     .ach-check { font-size:22px; min-width:24px; text-align:right; color:var(--green); }
-    .ach-section { padding:18px 20px 4px; color:#86efac; font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
+    .ach-section { padding:18px 20px 4px; color:var(--muted); font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
+
+    /* Sub-tab toggle (used inside Logs/Achievements tab) */
+    .sub-tabs { display:flex; gap:4px; padding:14px 14px 0; }
+    .sub-tab-btn { flex:1; padding:10px; background:var(--panel); color:#aaa; border-radius:9999px; text-align:center; font-weight:bold; cursor:pointer; font-size:13px; }
+    .sub-tab-btn.active { background:var(--green); color:var(--dark); }
+    .sub-pane { display:none; }
+    .sub-pane.active { display:block; }
+
+    /* Log rows */
+    .log-row { background:var(--panel); margin:10px 14px; padding:14px; border-radius:12px; cursor:pointer; }
+    .log-row.complete { background:#0a3d1f; }
+    .log-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .log-row-head .name { font-weight:bold; font-size:16px; }
+    .log-row.complete .name { color:var(--green); }
+    .log-row-head .count { color:#aaa; font-size:13px; }
+    .progress-bar { height:8px; background:var(--panel-deep); border-radius:9999px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--green); transition: width 0.5s; border-radius:9999px; }
+
+    /* Species list (inside log detail modal) */
+    .species-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #1a3d2a; text-align:left; }
+    .species-row.found { color:var(--green); }
+    .species-row.unfound { color:#555; }
+    .species-row.unfound .sci { color:#444; }
+    .species-row .com { font-weight:bold; }
+    .species-row .sci { display:block; font-style:italic; font-size:13px; color:#888; }
+    .species-row .marker { font-size:18px; min-width:20px; text-align:center; }
 
     /* Toast banner */
     .toast { position:fixed; top:20px; left:50%; transform:translate(-50%, -150%); background:var(--green); color:var(--dark); padding:14px 22px; border-radius:9999px; font-weight:bold; box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:2000; transition:transform 0.4s ease; max-width:90%; text-align:center; }
     .toast.show { transform:translate(-50%, 0); }
     .toast.error { background:#fca5a5; color:#450a0a; }
 
-    /* Settings gear button (top-right, always visible) */
+    /* Settings gear button */
     .gear-btn { position:fixed; top:12px; right:12px; background:rgba(15,61,42,0.92); color:var(--green); border:1px solid var(--green); width:42px; height:42px; padding:0; margin:0; border-radius:50%; font-size:20px; z-index:900; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 
     /* Settings modal */
@@ -57,7 +92,7 @@
     .input-row small { display:block; color:#aaa; font-size:12px; margin-top:6px; line-height:1.4; }
     .settings-content button { width:100%; }
 
-    /* Loading overlay (during AI identification) */
+    /* Loading overlay */
     .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1500; align-items:center; justify-content:center; flex-direction:column; gap:20px; }
     .loading-overlay.show { display:flex; }
     .spinner { width:60px; height:60px; border:5px solid #1a3d2a; border-top-color:var(--green); border-radius:50%; animation:spin 1s linear infinite; }
@@ -80,6 +115,66 @@
   <script src="https://unpkg.com/localforage@1.10.0/dist/localforage.min.js"></script>
   <script>
     /* ───────────────────────────────────────────────
+       MASTER SPECIES LIST (300 California flowers)
+       Slim format: id, sci, com, fam, bio, rar, edi, tox, nat, blo
+    ─────────────────────────────────────────────── */
+    const MASTER_FLOWERS = [{"id":"CA_001","sci":"Eschscholzia californica","com":"California Poppy","fam":"Papaveraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"2-5"},{"id":"CA_002","sci":"Lupinus polyphyllus","com":"Big-leaf Lupine","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_003","sci":"Clarkia unguiculata","com":"Elegant Clarkia","fam":"Onagraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_004","sci":"Collinsia heterophylla","com":"Chinese Houses","fam":"Plantaginaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_005","sci":"Argemone platyceras","com":"Mexican Prickly Poppy","fam":"Papaveraceae","bio":"Desert","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"5-8"},{"id":"CA_006","sci":"Eriogonum grande var. rubescens","com":"Red Buckwheat","fam":"Polygonaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-8"},{"id":"CA_007","sci":"Dudleya species","com":"Dudleya","fam":"Crassulaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-7"},{"id":"CA_008","sci":"Carpinteria californica","com":"Carpinteria Lily","fam":"Pittosporaceae","bio":"Coastal","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_009","sci":"Lycopodium clavatum","com":"Club Moss","fam":"Lycopodiaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"7-9"},{"id":"CA_010","sci":"Trillium ovatum","com":"Coast Trillium","fam":"Melanthiaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_011","sci":"Calypso bulbosa","com":"Fairy Slipper","fam":"Orchidaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_012","sci":"Gaultheria shallon","com":"Salal","fam":"Ericaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_013","sci":"Vaccinium ovatum","com":"California Huckleberry","fam":"Ericaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_014","sci":"Rhododendron macrophyllum","com":"Pacific Rhododendron","fam":"Ericaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_015","sci":"Pseudotsuga menziesii","com":"Douglas-fir","fam":"Pinaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_016","sci":"Sequoia sempervirens","com":"Coast Redwood","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_017","sci":"Oxalis oregana","com":"Redwood Sorrel","fam":"Oxalidaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":1,"nat":1,"blo":"4-6"},{"id":"CA_018","sci":"Anemone oregana","com":"Oregon Windflower","fam":"Ranunculaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_019","sci":"Maianthemum dilatatum","com":"False Lily-of-the-valley","fam":"Melanthiaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_020","sci":"Saxifraga oregana","com":"Oregonensis Saxifrage","fam":"Saxifragaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_021","sci":"Phlox diffusa","com":"Spreading Phlox","fam":"Polemoniaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_022","sci":"Lewisia cotyledon","com":"Siskiyou Lewisia","fam":"Montiaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-7"},{"id":"CA_023","sci":"Castilleja miniata","com":"Scarlet Paintbrush","fam":"Orobanchaceae","bio":"Alpine","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_024","sci":"Aquilegia formosa","com":"Sitka Columbine","fam":"Ranunculaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-8"},{"id":"CA_025","sci":"Polemonium californicum","com":"Jacob's Ladder","fam":"Polemoniaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_026","sci":"Silene acaulis","com":"Moss Campion","fam":"Caryophyllaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_027","sci":"Chionographis linearis","com":"Chionographis","fam":"Melanthiaceae","bio":"Alpine","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_028","sci":"Erytronium oreganum","com":"Oregon Fawn Lily","fam":"Melanthiaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_029","sci":"Triteleia hyacinthina","com":"Brodiaea","fam":"Asparagaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_030","sci":"Dichelostemma capitatum","com":"Blue Dicks","fam":"Asparagaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_031","sci":"Calochortus venustus","com":"Mariposa Lily","fam":"Liliaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_032","sci":"Calochortus luteus","com":"Yellow Mariposa Lily","fam":"Liliaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_033","sci":"Allium unifolium","com":"One-leafed Onion","fam":"Amaryllidaceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_034","sci":"Zigadenus venenosus","com":"Toxicoscordion","fam":"Melanthiaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":1,"nat":1,"blo":"4-6"},{"id":"CA_035","sci":"Iris macrosiphon","com":"Ground Iris","fam":"Iridaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-4"},{"id":"CA_036","sci":"Iris douglasiana","com":"Douglas Iris","fam":"Iridaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_037","sci":"Iris tenax","com":"Tough-leaved Iris","fam":"Iridaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_038","sci":"Narcissus pseudonarcissus","com":"Daffodil","fam":"Amaryllidaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"2-4"},{"id":"CA_039","sci":"Tulipa species","com":"Tulip","fam":"Liliaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"3-5"},{"id":"CA_040","sci":"Ranunculus acris","com":"Tall Buttercup","fam":"Ranunculaceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_041","sci":"Lysichitum americanus","com":"Skunk Cabbage","fam":"Araceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-4"},{"id":"CA_042","sci":"Veratrum viride ssp. oxysepalum","com":"False Hellebore","fam":"Melanthiaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":1,"nat":1,"blo":"4-6"},{"id":"CA_043","sci":"Cicuta douglasii","com":"Water Hemlock","fam":"Apiaceae","bio":"Wetlands","rar":"Common","edi":0,"tox":1,"nat":1,"blo":"6-8"},{"id":"CA_044","sci":"Epilobium angustifolium","com":"Fireweed","fam":"Onagraceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_045","sci":"Mimulus aurantiacus","com":"Sticky Monkey-flower","fam":"Phrymaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-9"},{"id":"CA_046","sci":"Mimulus cardinalis","com":"Cardinal Flower","fam":"Phrymaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-9"},{"id":"CA_047","sci":"Lamprocapnos spectabilis","com":"Bleeding Heart","fam":"Papaveraceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"3-6"},{"id":"CA_048","sci":"Dodecatheon hendersonii","com":"Mosquito Bills","fam":"Primulaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_049","sci":"Dodecatheon clevelandii","com":"Cleveland's Shooting Star","fam":"Primulaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"2-4"},{"id":"CA_050","sci":"Claytonia perfoliata","com":"Miners Lettuce","fam":"Montiaceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_051","sci":"Montia sibirica","com":"Siberian Miner's Lettuce","fam":"Montiaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_052","sci":"Aruncus dioicus","com":"Goat's Beard","fam":"Rosaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_053","sci":"Filipendula kamschatica","com":"Kamchatka Meadowsweet","fam":"Rosaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_054","sci":"Sorbus californica","com":"California Rowan","fam":"Rosaceae","bio":"Temperate Forest","rar":"Uncommon","edi":1,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_055","sci":"Photinia arbutifolia","com":"Toyon","fam":"Rosaceae","bio":"Mediterranean","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"11-1"},{"id":"CA_056","sci":"Rosa californica","com":"California Rose","fam":"Rosaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_057","sci":"Rosa gymnocarpa","com":"Dwarf Rose","fam":"Rosaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_058","sci":"Prunus ilicifolia","com":"Hollyleaf Cherry","fam":"Rosaceae","bio":"Mediterranean","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_059","sci":"Prunus lyonii","com":"Catalina Cherry","fam":"Rosaceae","bio":"Coastal","rar":"Rare","edi":1,"tox":0,"nat":1,"blo":"3-4"},{"id":"CA_060","sci":"Heteromeles arbutifolia","com":"Toyon","fam":"Rosaceae","bio":"Mediterranean","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"10-12"},{"id":"CA_061","sci":"Oemleria cerasiformis","com":"Oso Berry","fam":"Rosaceae","bio":"Temperate Forest","rar":"Uncommon","edi":1,"tox":0,"nat":1,"blo":"2-4"},{"id":"CA_062","sci":"Rubus spectabilis","com":"Salmonberry","fam":"Rosaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_063","sci":"Rubus parviflorus","com":"Thimbleberry","fam":"Rosaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_064","sci":"Rubus discolor","com":"Himalayan Blackberry","fam":"Rosaceae","bio":"Riparian","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_065","sci":"Fragaria chiloensis","com":"Beach Strawberry","fam":"Rosaceae","bio":"Coastal","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_066","sci":"Fragaria vesca","com":"Woodland Strawberry","fam":"Rosaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_067","sci":"Geum macrophyllum","com":"Large-leaved Avens","fam":"Rosaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_068","sci":"Potentilla anserina","com":"Silverleaf Cinquefoil","fam":"Rosaceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-7"},{"id":"CA_069","sci":"Potentilla glandulosa","com":"Sticky Cinquefoil","fam":"Rosaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_070","sci":"Ranunculus occidentalis","com":"Western Buttercup","fam":"Ranunculaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_071","sci":"Aconitum columbianum","com":"Monkshood","fam":"Ranunculaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":1,"nat":1,"blo":"6-8"},{"id":"CA_072","sci":"Helleborus niger","com":"Christmas Rose","fam":"Ranunculaceae","bio":"Urban","rar":"Uncommon","edi":0,"tox":1,"nat":0,"blo":"12-2"},{"id":"CA_073","sci":"Delphinium nudicaule","com":"Red Larkspur","fam":"Ranunculaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_074","sci":"Delphinium parryi","com":"Parry's Larkspur","fam":"Ranunculaceae","bio":"Desert","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_075","sci":"Adonis vernalis","com":"Spring Adonis","fam":"Ranunculaceae","bio":"Grasslands","rar":"Rare","edi":0,"tox":0,"nat":0,"blo":"3-5"},{"id":"CA_076","sci":"Actaea rubra","com":"Red Baneberry","fam":"Ranunculaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":1,"nat":1,"blo":"4-6"},{"id":"CA_077","sci":"Toxicoscordion venenosum","com":"Death Camas","fam":"Melanthiaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":1,"nat":1,"blo":"4-6"},{"id":"CA_078","sci":"Lilium pardalinum","com":"Leopard Lily","fam":"Liliaceae","bio":"Riparian","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-7"},{"id":"CA_079","sci":"Lilium washingtonianum","com":"Washington Lily","fam":"Liliaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_080","sci":"Lilium kelloggii","com":"Kellogg's Lily","fam":"Liliaceae","bio":"Temperate Forest","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"6-7"},{"id":"CA_081","sci":"Fritillaria lanceolata","com":"Chocolate Lily","fam":"Liliaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_082","sci":"Fritillaria affinis","com":"Scarlet Fritillary","fam":"Liliaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_083","sci":"Fritillaria biflora","com":"Chocolate Fritillary","fam":"Liliaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"2-4"},{"id":"CA_084","sci":"Fritillaria falcata","com":"Cobra Lily","fam":"Araceae","bio":"Temperate Forest","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_085","sci":"Sarcodes sanguinea","com":"Snowplant","fam":"Ericaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_086","sci":"Copprosma chytraculia","com":"Coprosma","fam":"Rubiaceae","bio":"Temperate Forest","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_087","sci":"Rhamnus californica","com":"Coffeeberry","fam":"Rhamnaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-7"},{"id":"CA_088","sci":"Ceanothus cuneatus","com":"Buckbrush","fam":"Rhamnaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_089","sci":"Ceanothus crassifolius","com":"Hoaryleaf Ceanothus","fam":"Rhamnaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_090","sci":"Ceanothus megacarpus","com":"Big Pod Ceanothus","fam":"Rhamnaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_091","sci":"Ceanothus thyrsiflorus","com":"Blue Blossom","fam":"Rhamnaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_092","sci":"Helianthus annuus","com":"Common Sunflower","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_093","sci":"Helichrysum bracteatum","com":"Strawflower","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_094","sci":"Layia platyglossa","com":"Tidy Tips","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_095","sci":"Mentzelia laevicaulis","com":"Blazing Star","fam":"Loasaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_096","sci":"Arnica mollis","com":"Soft Arnica","fam":"Asteraceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_097","sci":"Balsamorhiza sagittata","com":"Arrowleaf Balsamroot","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_098","sci":"Wyethia mollis","com":"Woolly Mule Ears","fam":"Asteraceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_099","sci":"Helenium autumnale","com":"Sneezeweed","fam":"Asteraceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"7-10"},{"id":"CA_100","sci":"Echinacea purpurea","com":"Purple Coneflower","fam":"Asteraceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_101","sci":"Rudbeckia hirta","com":"Black-eyed Susan","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_102","sci":"Solidago canadensis","com":"Canada Goldenrod","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"7-11"},{"id":"CA_103","sci":"Aster novi-belgii","com":"New York Aster","fam":"Asteraceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"9-11"},{"id":"CA_104","sci":"Aster subulatus","com":"Alkali Marsh Aster","fam":"Asteraceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"8-10"},{"id":"CA_105","sci":"Symphyotrichum subulatum var. subulatum","com":"Alkali Marsh Aster","fam":"Asteraceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"8-10"},{"id":"CA_106","sci":"Chaenactis artemisiifolia","com":"Desert Marigold","fam":"Asteraceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_107","sci":"Baileya multiradiata","com":"Desert Marigold","fam":"Asteraceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-11"},{"id":"CA_108","sci":"Encelia farinosa","com":"Brittle Bush","fam":"Asteraceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_109","sci":"Viguiera laciniata","com":"Alkali Goldflower","fam":"Asteraceae","bio":"Desert","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_110","sci":"Heliotropium arborescens","com":"Garden Heliotrope","fam":"Boraginaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-9"},{"id":"CA_111","sci":"Linanthus parviflorus","com":"Linanthus","fam":"Polemoniaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_112","sci":"Leptosiphon grandiflorus","com":"Largeflower Linanthus","fam":"Polemoniaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_113","sci":"Gilia tricolor","com":"Bird's Eyes","fam":"Polemoniaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_114","sci":"Gilia capitata","com":"Blue Gilia","fam":"Polemoniaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_115","sci":"Gilia stellata","com":"Starseed","fam":"Polemoniaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_116","sci":"Phlox speciosa","com":"Showy Phlox","fam":"Polemoniaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_117","sci":"Phlox adsurgens","com":"Woodland Phlox","fam":"Polemoniaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_118","sci":"Lithophragma parviflorum","com":"Littleflower Woodland-star","fam":"Saxifragaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_119","sci":"Mitella pentandra","com":"Pacific Mitella","fam":"Saxifragaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_120","sci":"Heuchera micrantha","com":"Small-flowered Alumroot","fam":"Saxifragaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-8"},{"id":"CA_121","sci":"Dicentra formosa","com":"Pacific Bleeding Heart","fam":"Papaveraceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-6"},{"id":"CA_122","sci":"Dicentra chrysantha","com":"Golden Eardrops","fam":"Papaveraceae","bio":"Desert","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_123","sci":"Aquilegia pubescens","com":"Alpine Columbine","fam":"Ranunculaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_124","sci":"Thalictrum polugamum","com":"Tall Meadow-rue","fam":"Ranunculaceae","bio":"Riparian","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_125","sci":"Clematis lasiantha","com":"Pipestem Clematis","fam":"Ranunculaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_126","sci":"Caltha palustris","com":"Marsh Marigold","fam":"Ranunculaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_127","sci":"Symphoricarpos mollis","com":"Creeping Snowberry","fam":"Caprifoliaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_128","sci":"Lonicera hispidula","com":"Hairy Honeysuckle","fam":"Caprifoliaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-7"},{"id":"CA_129","sci":"Lonicera involucrata","com":"Twinberry Honeysuckle","fam":"Caprifoliaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_130","sci":"Sambucus nigra ssp. canadensis","com":"American Elderberry","fam":"Caprifoliaceae","bio":"Riparian","rar":"Common","edi":1,"tox":1,"nat":1,"blo":"5-7"},{"id":"CA_131","sci":"Sambucus canadensis","com":"Canadian Elderberry","fam":"Caprifoliaceae","bio":"Riparian","rar":"Common","edi":1,"tox":1,"nat":1,"blo":"5-7"},{"id":"CA_132","sci":"Viburnum opulus","com":"Cranberry Bush","fam":"Caprifoliaceae","bio":"Wetlands","rar":"Uncommon","edi":1,"tox":0,"nat":0,"blo":"5-6"},{"id":"CA_133","sci":"Valeriana californica","com":"California Valerian","fam":"Valerianaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_134","sci":"Dipsacus fullonum","com":"Fuller's Teasel","fam":"Dipsacaceae","bio":"Riparian","rar":"Uncommon","edi":0,"tox":0,"nat":0,"blo":"7-9"},{"id":"CA_135","sci":"Knautia arvensis","com":"Field Scabious","fam":"Dipsacaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_136","sci":"Campanula prenanthoides","com":"Sierran Harebell","fam":"Campanulaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_137","sci":"Lobelia cardinalis","com":"Cardinal Flower","fam":"Campanulaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"7-9"},{"id":"CA_138","sci":"Nemophila menziesii","com":"Baby Blue Eyes","fam":"Hydrophyllaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_139","sci":"Nemophila parviflora","com":"Small-flowered Nemophila","fam":"Hydrophyllaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_140","sci":"Nemophila pulchella","com":"Elegant Nemophila","fam":"Hydrophyllaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_141","sci":"Phacelia whitlavia","com":"Whitlavia","fam":"Hydrophyllaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_142","sci":"Phacelia tanacetifolia","com":"Tansy Phacelia","fam":"Hydrophyllaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-9"},{"id":"CA_143","sci":"Phacelia imbricata","com":"Imbricate Phacelia","fam":"Polemoniaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_144","sci":"Scorpiurus muricatus","com":"Spinny Scorpiontail","fam":"Brassicaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_145","sci":"Cakile maritima","com":"European Searocket","fam":"Brassicaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-10"},{"id":"CA_146","sci":"Matthiola incana","com":"Stock","fam":"Brassicaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"3-6"},{"id":"CA_147","sci":"Erysimum capitatum","com":"Sanddune Wallflower","fam":"Brassicaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-8"},{"id":"CA_148","sci":"Cheiranthus cheiri","com":"Wallflower","fam":"Brassicaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"3-6"},{"id":"CA_149","sci":"Raphanus sativus","com":"Radish","fam":"Brassicaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_150","sci":"Brassica rapa","com":"Turnip","fam":"Brassicaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_151","sci":"Lepidium nitidum","com":"Shiny Peppergrass","fam":"Brassicaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_152","sci":"Capsella bursa-pastoris","com":"Shepherd's Purse","fam":"Brassicaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"3-11"},{"id":"CA_153","sci":"Thlaspi arvense","com":"Field Pennycress","fam":"Brassicaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_154","sci":"Descurainia pinnata","com":"Tansy Mustard","fam":"Brassicaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_155","sci":"Streptanthus glandulosus","com":"Glanded Streptanthus","fam":"Brassicaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_156","sci":"Tropaeolum majus","com":"Nasturtium","fam":"Tropaeolaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"5-10"},{"id":"CA_157","sci":"Hypericum perforatum","com":"St. Johns Wort","fam":"Hypericaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_158","sci":"Hypericum anagalloides","com":"Tinker's Penny","fam":"Hypericaceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-8"},{"id":"CA_159","sci":"Viola odorata","com":"Sweet Violet","fam":"Violaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"2-4"},{"id":"CA_160","sci":"Viola purpurea","com":"Pine Violet","fam":"Violaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_161","sci":"Viola ocellata","com":"Whitest Violet","fam":"Violaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_162","sci":"Viola adunca","com":"Early Blue Violet","fam":"Violaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_163","sci":"Viola palustris","com":"Marsh Violet","fam":"Violaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_164","sci":"Passiflora edulis","com":"Passion Flower","fam":"Passifloraceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_165","sci":"Salix alba","com":"White Willow","fam":"Salicaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"3-4"},{"id":"CA_166","sci":"Populus tremuloides","com":"Quaking Aspen","fam":"Salicaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-4"},{"id":"CA_167","sci":"Abies concolor","com":"White Fir","fam":"Pinaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_168","sci":"Pinus ponderosa","com":"Ponderosa Pine","fam":"Pinaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_169","sci":"Pinus lambertiana","com":"Sugar Pine","fam":"Pinaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_170","sci":"Pinus contorta","com":"Lodgepole Pine","fam":"Pinaceae","bio":"Alpine","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_171","sci":"Pinus muricata","com":"Bishop Pine","fam":"Pinaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_172","sci":"Sequoiadendron giganteum","com":"Giant Sequoia","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_173","sci":"Libocedrus decurrens","com":"Incense Cedar","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_174","sci":"Calocedrus decurrens","com":"California Incense Cedar","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_175","sci":"Chamaecyparis lawsoniana","com":"Port Orford Cedar","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_176","sci":"Juniperus californica","com":"California Juniper","fam":"Cupressaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_177","sci":"Juniperus occidentalis","com":"Western Juniper","fam":"Cupressaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_178","sci":"Juniperus deppeana","com":"Alligator Juniper","fam":"Cupressaceae","bio":"Desert","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_179","sci":"Arborvitae occidentalis","com":"Western Red Cedar","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_180","sci":"Thuja plicata","com":"Western Red Cedar","fam":"Cupressaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_181","sci":"Tsuga heterophylla","com":"Western Hemlock","fam":"Pinaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_182","sci":"Picea sitchensis","com":"Sitka Spruce","fam":"Pinaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_183","sci":"Alnus rubra","com":"Red Alder","fam":"Betulaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"2-3"},{"id":"CA_184","sci":"Betula papyrifera","com":"Paper Birch","fam":"Betulaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_185","sci":"Cornus nuttallii","com":"Flowering Dogwood","fam":"Cornaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_186","sci":"Cornus stolonifera","com":"Red-osier Dogwood","fam":"Cornaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_187","sci":"Cornus alba","com":"Siberian Dogwood","fam":"Cornaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_188","sci":"Quercus kelloggii","com":"Black Oak","fam":"Fagaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_189","sci":"Quercus garryana","com":"Garry Oak","fam":"Fagaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_190","sci":"Quercus agrifolia","com":"Coast Live Oak","fam":"Fagaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_191","sci":"Quercus chrysolepis","com":"Canyon Live Oak","fam":"Fagaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_192","sci":"Quercus wislizenii","com":"Interior Live Oak","fam":"Fagaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_193","sci":"Quercus douglasii","com":"Blue Oak","fam":"Fagaceae","bio":"Mediterranean","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-4"},{"id":"CA_194","sci":"Quercus lobata","com":"Valley Oak","fam":"Fagaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_195","sci":"Notholithocarpus densiflorus","com":"Tanoak","fam":"Fagaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_196","sci":"Lithocarpus densiflorus","com":"Tanoak","fam":"Fagaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_197","sci":"Castanopsis chrysophylla","com":"Golden Chinquapin","fam":"Fagaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_198","sci":"Castanea dentata","com":"American Chestnut","fam":"Fagaceae","bio":"Temperate Forest","rar":"Rare","edi":1,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_199","sci":"Acer macrophyllum","com":"Big-leaf Maple","fam":"Aceraceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_200","sci":"Acer circinatum","com":"Vine Maple","fam":"Aceraceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_201","sci":"Umbellularia californica","com":"California Bay Laurel","fam":"Lauraceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"2-5"},{"id":"CA_202","sci":"Calycanthus occidentalis","com":"Western Sweetshrub","fam":"Calycanthaceae","bio":"Riparian","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_203","sci":"Sarcodes sanguinea","com":"Snowplant","fam":"Ericaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_204","sci":"Chimaphila umbellata","com":"Prince's Pine","fam":"Ericaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_205","sci":"Monotropa uniflora","com":"Ghost Pipe","fam":"Ericaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_206","sci":"Pyrola picta","com":"Whitevein Wintergreen","fam":"Ericaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_207","sci":"Arbutus menziesii","com":"Madrone","fam":"Ericaceae","bio":"Mediterranean","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_208","sci":"Osmanthus fragrans","com":"Fragrant Olive","fam":"Oleaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"9-12"},{"id":"CA_209","sci":"Syringa vulgaris","com":"Common Lilac","fam":"Oleaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-5"},{"id":"CA_210","sci":"Jasminum officinale","com":"Jasmine","fam":"Oleaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_211","sci":"Fraxinus oregona","com":"Oregon Ash","fam":"Oleaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-4"},{"id":"CA_212","sci":"Sarcobatus vermiculatus","com":"Black Greasewood","fam":"Amaranthaceae","bio":"Desert","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_213","sci":"Grayia spinosa","com":"Hopsage","fam":"Amaranthaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-5"},{"id":"CA_214","sci":"Lycium californicum","com":"California Desert Thorn","fam":"Solanaceae","bio":"Desert","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_215","sci":"Hyoscyamus niger","com":"Black Henbane","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"5-7"},{"id":"CA_216","sci":"Datura wrightii","com":"Sacred Datura","fam":"Solanaceae","bio":"Desert","rar":"Common","edi":0,"tox":1,"nat":1,"blo":"6-9"},{"id":"CA_217","sci":"Capsicum annuum","com":"Bell Pepper","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_218","sci":"Solanum lycopersicum","com":"Tomato","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_219","sci":"Solanum americanum","com":"Black Nightshade","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":1,"tox":1,"nat":0,"blo":"6-10"},{"id":"CA_220","sci":"Nicotiana tabacum","com":"Tobacco","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"5-9"},{"id":"CA_221","sci":"Nicotiana attenuata","com":"Coyote Tobacco","fam":"Solanaceae","bio":"Desert","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_222","sci":"Petunia violacea","com":"Petunia","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-10"},{"id":"CA_223","sci":"Calibrachoa","com":"Million Bells","fam":"Solanaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-10"},{"id":"CA_224","sci":"Arctostaphylos manzanita","com":"Manzanita","fam":"Ericaceae","bio":"Mediterranean","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"2-4"},{"id":"CA_225","sci":"Arctostaphylos glandulosa","com":"Eastwood's Manzanita","fam":"Ericaceae","bio":"Mediterranean","rar":"Uncommon","edi":1,"tox":0,"nat":1,"blo":"2-4"},{"id":"CA_226","sci":"Arctostaphylos nevadensis","com":"Pinemat Manzanita","fam":"Ericaceae","bio":"Alpine","rar":"Uncommon","edi":1,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_227","sci":"Arctostaphylos patula","com":"Greenleaf Manzanita","fam":"Ericaceae","bio":"Alpine","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_228","sci":"Arctostaphylos uva-ursi","com":"Bearberry","fam":"Ericaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_229","sci":"Kalmia latifolia","com":"Mountain Laurel","fam":"Ericaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-6"},{"id":"CA_230","sci":"Oxydendrum arboreum","com":"Sourwood","fam":"Ericaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-7"},{"id":"CA_231","sci":"Symphysia paniculata","com":"Island Ironwood","fam":"Euphorbiaceae","bio":"Coastal","rar":"Rare","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_232","sci":"Ricinus communis","com":"Castor Bean","fam":"Euphorbiaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"6-10"},{"id":"CA_233","sci":"Manihot esculenta","com":"Cassava","fam":"Euphorbiaceae","bio":"Urban","rar":"Common","edi":1,"tox":1,"nat":0,"blo":"Varies"},{"id":"CA_234","sci":"Mercurialis annua","com":"Annual Mercury","fam":"Euphorbiaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-9"},{"id":"CA_235","sci":"Euphorbia pulcherrima","com":"Poinsettia","fam":"Euphorbiaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"10-12"},{"id":"CA_236","sci":"Euphorbia latex","com":"Euphorbia","fam":"Euphorbiaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"Varies"},{"id":"CA_237","sci":"Callitris endlicheri","com":"Black Cypress Pine","fam":"Cupressaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-5"},{"id":"CA_238","sci":"Acacia melanoxylon","com":"Blackwood Acacia","fam":"Fabaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"2-4"},{"id":"CA_239","sci":"Acacia dealbata","com":"Silver Wattle","fam":"Fabaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"1-3"},{"id":"CA_240","sci":"Acacia longifolia","com":"Sydney Golden Wattle","fam":"Fabaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"1-3"},{"id":"CA_241","sci":"Lupinus perennis","com":"Wild Lupine","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_242","sci":"Lupinus densiflorus","com":"Gland Lupine","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_243","sci":"Lupinus nanus","com":"Pygmy Lupine","fam":"Fabaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_244","sci":"Lupinus succulentus","com":"Arroyo Lupine","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_245","sci":"Lupinus bicolor","com":"Miniature Lupine","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_246","sci":"Lathyrus latifolius","com":"Everlasting Pea","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-8"},{"id":"CA_247","sci":"Lathyrus sylvestris","com":"Flat Pea","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-8"},{"id":"CA_248","sci":"Vicia americana","com":"American Vetch","fam":"Fabaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_249","sci":"Vicia villosa","com":"Hairy Vetch","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-8"},{"id":"CA_250","sci":"Trifolium repens","com":"White Clover","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-8"},{"id":"CA_251","sci":"Trifolium pratense","com":"Red Clover","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-9"},{"id":"CA_252","sci":"Trifolium wormskioldii","com":"Cow Clover","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_253","sci":"Medicago sativa","com":"Alfalfa","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"5-8"},{"id":"CA_254","sci":"Melilotus alba","com":"White Sweet Clover","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_255","sci":"Medicago lupulina","com":"Black Medic","fam":"Fabaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-7"},{"id":"CA_256","sci":"Lotus pinnatus","com":"Var-leaved Lotus","fam":"Fabaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_257","sci":"Lotus scoparius","com":"Deerweed","fam":"Fabaceae","bio":"Coastal","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-8"},{"id":"CA_258","sci":"Astragalus canadensis","com":"Canadian Milkvetch","fam":"Fabaceae","bio":"Riparian","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"5-7"},{"id":"CA_259","sci":"Astragalus didymocarpus","com":"Twopod Milkvetch","fam":"Fabaceae","bio":"Coastal","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_260","sci":"Astragalus filipes","com":"Alkali Milkvetch","fam":"Fabaceae","bio":"Grasslands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_261","sci":"Oxytropis campestris","com":"Pointloco","fam":"Fabaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_262","sci":"Hedysarum boreale","com":"Northern Sweetvetch","fam":"Fabaceae","bio":"Alpine","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_263","sci":"Amorpha fruticosa","com":"False Indigo","fam":"Fabaceae","bio":"Riparian","rar":"Uncommon","edi":0,"tox":0,"nat":0,"blo":"4-7"},{"id":"CA_264","sci":"Indigofera tinctoria","com":"Indigo","fam":"Fabaceae","bio":"Urban","rar":"Uncommon","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_265","sci":"Eryngium aquaticum","com":"Rattlesnake Master","fam":"Apiaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-9"},{"id":"CA_266","sci":"Heracleum lanatum","com":"Cow Parsnip","fam":"Apiaceae","bio":"Riparian","rar":"Common","edi":0,"tox":1,"nat":1,"blo":"5-7"},{"id":"CA_267","sci":"Pastinaca sativa","com":"Wild Parsnip","fam":"Apiaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"6-9"},{"id":"CA_268","sci":"Daucus carota","com":"Wild Carrot","fam":"Apiaceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"5-10"},{"id":"CA_269","sci":"Foeniculum vulgare","com":"Fennel","fam":"Apiaceae","bio":"Coastal","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"5-11"},{"id":"CA_270","sci":"Angelica archangelica","com":"Angelica","fam":"Apiaceae","bio":"Temperate Forest","rar":"Uncommon","edi":1,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_271","sci":"Conium maculatum","com":"Poison Hemlock","fam":"Apiaceae","bio":"Riparian","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"5-8"},{"id":"CA_272","sci":"Anthriscus caucalis","com":"Bur Chervil","fam":"Apiaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_273","sci":"Torilis japonica","com":"Spreading Hedgeparsley","fam":"Apiaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-8"},{"id":"CA_274","sci":"Aethusa cynapium","com":"Fool's Parsley","fam":"Apiaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"6-8"},{"id":"CA_275","sci":"Osmorhiza claytonii","com":"Bland Sweet Cicely","fam":"Apiaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_276","sci":"Lomatium nudicaule","com":"Barestem Parsnip","fam":"Apiaceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"3-5"},{"id":"CA_277","sci":"Cymopterus terebinthinus","com":"Turpentine Spring Parsnip","fam":"Apiaceae","bio":"Desert","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_278","sci":"Perideridia gairdneri","com":"Yampah","fam":"Apiaceae","bio":"Wetlands","rar":"Common","edi":1,"tox":0,"nat":1,"blo":"5-8"},{"id":"CA_279","sci":"Chaerophyllum procumbens","com":"Spreading Chervil","fam":"Apiaceae","bio":"Temperate Forest","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_280","sci":"Cicuta virosa","com":"European Water Hemlock","fam":"Apiaceae","bio":"Wetlands","rar":"Uncommon","edi":0,"tox":1,"nat":0,"blo":"6-8"},{"id":"CA_281","sci":"Sium suave","com":"Water Parsnip","fam":"Apiaceae","bio":"Wetlands","rar":"Common","edi":0,"tox":0,"nat":1,"blo":"6-9"},{"id":"CA_282","sci":"Thaspium barbinode","com":"Hairy Meadow Parsnip","fam":"Apiaceae","bio":"Riparian","rar":"Uncommon","edi":0,"tox":0,"nat":0,"blo":"5-7"},{"id":"CA_283","sci":"Smyrnium olusatrum","com":"Smyrnium","fam":"Apiaceae","bio":"Coastal","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_284","sci":"Myrrhis odorata","com":"Sweet Cicely","fam":"Apiaceae","bio":"Temperate Forest","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_285","sci":"Aralia californica","com":"California Spikenard","fam":"Araliaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_286","sci":"Panax quinquefolius","com":"American Ginseng","fam":"Araliaceae","bio":"Temperate Forest","rar":"Rare","edi":1,"tox":0,"nat":1,"blo":"4-6"},{"id":"CA_287","sci":"Hydrangea paniculata","com":"Hydrangea","fam":"Hydrangeaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_288","sci":"Hydrangea macrophylla","com":"Bigleaf Hydrangea","fam":"Hydrangeaceae","bio":"Urban","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_289","sci":"Philadelphus gordonianus","com":"Mock Orange","fam":"Philadelphaceae","bio":"Temperate Forest","rar":"Uncommon","edi":0,"tox":0,"nat":1,"blo":"5-6"},{"id":"CA_290","sci":"Sambucus ebulus","com":"Dwarf Elderberry","fam":"Caprifoliaceae","bio":"Urban","rar":"Common","edi":0,"tox":1,"nat":0,"blo":"6-8"},{"id":"CA_291","sci":"Scabiosa columbaria","com":"Small Scabious","fam":"Dipsacaceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-9"},{"id":"CA_292","sci":"Lactuca sativa","com":"Lettuce","fam":"Asteraceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_293","sci":"Cichorium intybus","com":"Chicory","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"6-9"},{"id":"CA_294","sci":"Taraxacum officinale","com":"Dandelion","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"3-10"},{"id":"CA_295","sci":"Cicerbita alpina","com":"Alpine Sow-thistle","fam":"Asteraceae","bio":"Alpine","rar":"Uncommon","edi":1,"tox":0,"nat":1,"blo":"6-8"},{"id":"CA_296","sci":"Sonchus asper","com":"Spiny Sowthistle","fam":"Asteraceae","bio":"Urban","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-10"},{"id":"CA_297","sci":"Hypochaeris glabra","com":"Smooth Cat's-ear","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"4-6"},{"id":"CA_298","sci":"Hypochaeris radicata","com":"Hairy Cat's-ear","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-9"},{"id":"CA_299","sci":"Leontodon saxatilis","com":"Lesser Hawkbit","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":0,"tox":0,"nat":0,"blo":"5-9"},{"id":"CA_300","sci":"Tragopogon dubius","com":"Salsify","fam":"Asteraceae","bio":"Grasslands","rar":"Common","edi":1,"tox":0,"nat":0,"blo":"4-6"}];
+
+    /* ───────────────────────────────────────────────
+       BIOME LOOKUP TABLE
+       Order matters: more-specific (smaller) regions
+       come FIRST so they win the lat/lng match.
+    ─────────────────────────────────────────────── */
+    const CALIFORNIA_BIOME_MAP = [
+      // Urban — most specific, must come first
+      { minLat: 37.0, maxLat: 37.9, minLng: -122.7, maxLng: -121.8, biome: "Urban",       region: "San Francisco Bay Area" },
+      { minLat: 32.5, maxLat: 33.3, minLng: -117.3, maxLng: -116.8, biome: "Urban",       region: "San Diego Metro" },
+      { minLat: 33.8, maxLat: 34.2, minLng: -118.5, maxLng: -117.8, biome: "Urban",       region: "Los Angeles Metro" },
+      { minLat: 35.2, maxLat: 35.8, minLng: -120.8, maxLng: -119.8, biome: "Urban",       region: "Fresno Metro" },
+      { minLat: 38.5, maxLat: 38.8, minLng: -121.5, maxLng: -121.2, biome: "Urban",       region: "Sacramento Metro" },
+
+      // Wetlands & Riparian — small, specific
+      { minLat: 37.2, maxLat: 37.8, minLng: -122.5, maxLng: -121.5, biome: "Wetlands",    region: "San Francisco Bay Wetlands" },
+      { minLat: 37.5, maxLat: 39.0, minLng: -123.5, maxLng: -121.5, biome: "Wetlands",    region: "North Bay Wetlands" },
+      { minLat: 35.0, maxLat: 40.0, minLng: -123.5, maxLng: -119.5, biome: "Riparian",    region: "Sacramento River System" },
+      { minLat: 34.0, maxLat: 37.5, minLng: -122.0, maxLng: -120.0, biome: "Riparian",    region: "San Joaquin River System" },
+
+      // Alpine — high Sierra
+      { minLat: 37.0, maxLat: 39.5, minLng: -121.0, maxLng: -118.0, biome: "Alpine",      region: "High Sierra" },
+      { minLat: 36.0, maxLat: 37.0, minLng: -118.5, maxLng: -117.5, biome: "Alpine",      region: "Southern Sierra" },
+
+      // Desert
+      { minLat: 32.5, maxLat: 36.5, minLng: -118.5, maxLng: -114.0, biome: "Desert",      region: "Mojave Desert" },
+      { minLat: 36.5, maxLat: 38.0, minLng: -119.5, maxLng: -117.0, biome: "Desert",      region: "Great Basin Desert" },
+
+      // Mediterranean
+      { minLat: 34.0, maxLat: 36.5, minLng: -122.5, maxLng: -120.0, biome: "Mediterranean", region: "Central Coast" },
+      { minLat: 36.5, maxLat: 37.5, minLng: -121.5, maxLng: -119.5, biome: "Mediterranean", region: "Southern Sierra Foothills" },
+
+      // Temperate Forest
+      { minLat: 40.5, maxLat: 42.0, minLng: -124.5, maxLng: -121.0, biome: "Temperate Forest", region: "North Coast Range" },
+      { minLat: 38.0, maxLat: 40.5, minLng: -122.5, maxLng: -120.5, biome: "Temperate Forest", region: "Sierra Nevada" },
+
+      // Grasslands
+      { minLat: 35.0, maxLat: 38.5, minLng: -123.0, maxLng: -120.0, biome: "Grasslands",  region: "Central Valley" },
+      { minLat: 38.5, maxLat: 40.0, minLng: -123.5, maxLng: -121.5, biome: "Grasslands",  region: "Northern Interior" },
+
+      // Coastal — broad, comes last as fallback for anything along the coast
+      { minLat: 32.5, maxLat: 42.0, minLng: -124.5, maxLng: -121.5, biome: "Coastal",     region: "Pacific Coastline" },
+    ];
+
+    function getBiomeFromLocation(lat, lng) {
+      if (lat == null || lng == null) return null;
+      for (const r of CALIFORNIA_BIOME_MAP) {
+        if (lat >= r.minLat && lat <= r.maxLat && lng >= r.minLng && lng <= r.maxLng) {
+          return { biome: r.biome, region: r.region };
+        }
+      }
+      if (lat >= 32.5 && lat <= 42.0 && lng >= -124.5 && lng <= -114.0) return { biome: "Unknown", region: "California" };
+      return { biome: "Outside CA", region: "" };
+    }
+
+    /* ───────────────────────────────────────────────
        STATE
     ─────────────────────────────────────────────── */
     let flowers = [];
@@ -89,12 +184,9 @@
 
     /* ───────────────────────────────────────────────
        AI CONFIG + PROVIDER ABSTRACTION
-       Forward-compatible: add new provider keys
-       (ollama, webllm, etc.) without touching the
-       rest of the app.
     ─────────────────────────────────────────────── */
     const AI_CONFIG = {
-      provider: 'claude', // future: 'ollama' | 'webllm'
+      provider: 'claude',
       visionModel: localStorage.getItem('flowerdex_vision_model') || 'claude-haiku-4-5-20251001',
       chatModel:   localStorage.getItem('flowerdex_chat_model')   || 'claude-haiku-4-5-20251001',
       apiKey: () => localStorage.getItem('flowerdex_apikey') || '',
@@ -105,9 +197,7 @@
         async identifyFlower(imageBase64) {
           const apiKey = AI_CONFIG.apiKey();
           if (!apiKey) throw new Error('No API key set. Tap ⚙️ to add one.');
-
           const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-
           const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -137,30 +227,24 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
               }]
             })
           });
-
           if (!res.ok) {
             if (res.status === 401) throw new Error('Invalid API key. Check ⚙️ settings.');
             if (res.status === 429) throw new Error('Rate limit hit. Wait a moment.');
             const t = await res.text();
             throw new Error(`API error (${res.status}): ${t.slice(0, 120)}`);
           }
-
           const data = await res.json();
           const text = data.content?.[0]?.text || '';
           const cleaned = text.replace(/^```json\s*|^```\s*|```\s*$/g, '').trim();
-
           let parsed;
           try { parsed = JSON.parse(cleaned); }
           catch (e) { throw new Error('AI returned an unreadable response. Try again.'); }
-
           if (parsed.error) throw new Error(parsed.error);
           return parsed;
         },
-
         async chat(messages, systemPrompt) {
           const apiKey = AI_CONFIG.apiKey();
           if (!apiKey) throw new Error('No API key set. Tap ⚙️ to add one.');
-
           const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -176,31 +260,35 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
               messages: messages,
             })
           });
-
           if (!res.ok) {
             if (res.status === 401) throw new Error('Invalid API key.');
             if (res.status === 429) throw new Error('Rate limit hit.');
             throw new Error(`API error (${res.status})`);
           }
-
           const data = await res.json();
           return data.content?.[0]?.text || '(no response)';
         }
       },
-      // Future providers slot in here:
-      // ollama: { identifyFlower(...) {...}, chat(...) {...} },
-      // webllm: { identifyFlower(...) {...}, chat(...) {...} },
     };
 
-    async function aiIdentifyFlower(imageBase64) {
-      return aiProviders[AI_CONFIG.provider].identifyFlower(imageBase64);
-    }
-    async function aiChat(messages, systemPrompt) {
-      return aiProviders[AI_CONFIG.provider].chat(messages, systemPrompt);
+    async function aiIdentifyFlower(imageBase64) { return aiProviders[AI_CONFIG.provider].identifyFlower(imageBase64); }
+    async function aiChat(messages, systemPrompt) { return aiProviders[AI_CONFIG.provider].chat(messages, systemPrompt); }
+
+    /* ───────────────────────────────────────────────
+       MASTER LIST MATCHING
+       Match a scanned flower to the master list by
+       scientific name (case-insensitive, first 2 words).
+    ─────────────────────────────────────────────── */
+    function masterIdFor(scientificName) {
+      if (!scientificName) return null;
+      const norm = s => String(s).toLowerCase().trim().split(/\s+/).slice(0, 2).join(' ');
+      const target = norm(scientificName);
+      const match = MASTER_FLOWERS.find(m => norm(m.sci) === target);
+      return match ? match.id : null;
     }
 
     /* ───────────────────────────────────────────────
-       IMAGE HELPER — resize before API to save tokens
+       IMAGE HELPER — resize before API
     ─────────────────────────────────────────────── */
     function resizeImage(base64, maxDim = 1024) {
       return new Promise((resolve, reject) => {
@@ -219,9 +307,6 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       });
     }
 
-    /* ───────────────────────────────────────────────
-       MOCK AI — fallback when no API key set
-    ─────────────────────────────────────────────── */
     function mockAI() {
       return {
         scientificName: "Taraxacum officinale",
@@ -238,11 +323,15 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       flowers = await db.getItem('flowers') || [];
       renderCollection();
       renderAchievements();
+      renderLogs();
       checkAchievements({ silent: true });
     }
 
     async function saveFlower(photoBase64, aiResult) {
       const location = await getLocation();
+      const biomeInfo = location ? getBiomeFromLocation(location.lat, location.lng) : null;
+      const masterId = masterIdFor(aiResult.scientificName);
+
       const entry = {
         id: Date.now(),
         photo: photoBase64,
@@ -251,11 +340,15 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
         family: aiResult.family,
         tidbit: aiResult.tidbit,
         location,
+        biome: biomeInfo ? biomeInfo.biome : null,
+        region: biomeInfo ? biomeInfo.region : null,
+        masterId, // null if not in our 300-species master list
         timestamp: new Date().toISOString()
       };
       flowers.unshift(entry);
       await db.setItem('flowers', flowers);
       renderCollection();
+      renderLogs();
       checkAchievements();
     }
 
@@ -268,7 +361,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
             <div class="card-text">
               <h3>${escapeHtml(f.common)}</h3>
               <span class="sci">${escapeHtml(f.scientific)}</span>
-              <span class="date">${new Date(f.timestamp).toLocaleDateString()}</span>
+              <span class="date">${new Date(f.timestamp).toLocaleDateString()}${f.biome ? ' · ' + escapeHtml(f.biome) : ''}</span>
             </div>
             <img src="${f.photo}" class="thumb">
           </div>
@@ -278,15 +371,28 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     function showDetail(id) {
       const flower = flowers.find(f => f.id === id);
       if (!flower) return;
+      const master = flower.masterId ? MASTER_FLOWERS.find(m => m.id === flower.masterId) : null;
+
+      const badges = [];
+      if (flower.biome) badges.push(`<span class="badge biome">${escapeHtml(flower.biome)}</span>`);
+      if (flower.family) badges.push(`<span class="badge family">${escapeHtml(flower.family)}</span>`);
+      if (master) {
+        badges.push(`<span class="badge rarity-${master.rar.toLowerCase()}">${master.rar}</span>`);
+        if (master.edi) badges.push('<span class="badge edible">Edible</span>');
+        if (master.tox) badges.push('<span class="badge toxic">Toxic</span>');
+        if (master.nat) badges.push('<span class="badge native">Native</span>');
+      }
+
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
           <div class="modal-content" onclick="event.stopImmediatePropagation()">
             <img src="${flower.photo}" alt="${escapeHtml(flower.common)}">
-            <h2>${escapeHtml(flower.common)}</h2>
-            <i>${escapeHtml(flower.scientific)}</i>
-            <p><strong>Family:</strong> ${escapeHtml(flower.family)}</p>
+            <h2 style="margin:0 0 4px;">${escapeHtml(flower.common)}</h2>
+            <i style="color:#cfe;">${escapeHtml(flower.scientific)}</i>
+            <div style="margin:12px 0;">${badges.join(' ')}</div>
             <p>${escapeHtml(flower.tidbit)}</p>
-            <small>Scanned: ${new Date(flower.timestamp).toLocaleDateString()}</small>
+            ${flower.region ? `<p style="color:#aaa; font-size:13px;">📍 ${escapeHtml(flower.region)}</p>` : ''}
+            <small style="color:#aaa;">Scanned: ${new Date(flower.timestamp).toLocaleDateString()}</small>
             <button onclick="hideModal()" style="margin-top:20px;">Close</button>
           </div>
         </div>`;
@@ -300,7 +406,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     }
 
     /* ───────────────────────────────────────────────
-       GEOLOCATION + DISTANCE HELPERS
+       GEOLOCATION HELPERS
     ─────────────────────────────────────────────── */
     function getLocation() {
       if (!navigator.geolocation) return Promise.resolve(null);
@@ -331,38 +437,152 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     }
 
     /* ───────────────────────────────────────────────
+       LOGS — Biome view + Family view
+       Shows progress against master list.
+    ─────────────────────────────────────────────── */
+    let activeLogPane = 'biome'; // 'biome' | 'family'
+
+    function switchLogPane(pane) {
+      activeLogPane = pane;
+      document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.pane === pane));
+      document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + pane));
+    }
+
+    function getMasterCounts(field) {
+      // Return { [bucketName]: { total, found, foundIds } }
+      const totals = {};
+      MASTER_FLOWERS.forEach(m => {
+        const k = m[field];
+        if (!totals[k]) totals[k] = { total: 0, found: 0, foundIds: new Set() };
+        totals[k].total++;
+      });
+      const foundMasterIds = new Set(flowers.map(f => f.masterId).filter(Boolean));
+      MASTER_FLOWERS.forEach(m => {
+        if (foundMasterIds.has(m.id)) {
+          const k = m[field];
+          totals[k].found++;
+          totals[k].foundIds.add(m.id);
+        }
+      });
+      return totals;
+    }
+
+    function renderLogs() {
+      renderBiomeLog();
+      renderFamilyLog();
+    }
+
+    function renderLogRows(counts, type) {
+      // type is 'bio' or 'fam' — used so detail modal knows which field to filter by
+      const sorted = Object.entries(counts).sort((a, b) => b[1].total - a[1].total);
+      return sorted.map(([name, c]) => {
+        const pct = Math.round((c.found / c.total) * 100);
+        const complete = c.found === c.total;
+        return `
+          <div class="log-row ${complete ? 'complete' : ''}" onclick="showLogDetail('${type}', '${escapeAttr(name)}')">
+            <div class="log-row-head">
+              <span class="name">${escapeHtml(name)} ${complete ? '✓' : ''}</span>
+              <span class="count">${c.found} / ${c.total} (${pct}%)</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderBiomeLog() {
+      const el = document.getElementById('pane-biome');
+      if (!el) return;
+      el.innerHTML = renderLogRows(getMasterCounts('bio'), 'bio');
+    }
+
+    function renderFamilyLog() {
+      const el = document.getElementById('pane-family');
+      if (!el) return;
+      el.innerHTML = renderLogRows(getMasterCounts('fam'), 'fam');
+    }
+
+    function showLogDetail(field, name) {
+      // Show all species in this biome or family, marked found/unfound
+      const species = MASTER_FLOWERS.filter(m => m[field] === name);
+      const foundIds = new Set(flowers.map(f => f.masterId).filter(Boolean));
+
+      const found    = species.filter(s => foundIds.has(s.id));
+      const unfound  = species.filter(s => !foundIds.has(s.id));
+
+      const rowHtml = (s, isFound) => `
+        <div class="species-row ${isFound ? 'found' : 'unfound'}">
+          <div>
+            <span class="com">${isFound ? escapeHtml(s.com) : '???'}</span>
+            <span class="sci">${isFound ? escapeHtml(s.sci) : '— locked —'}</span>
+          </div>
+          <span class="marker">${isFound ? '✓' : '🔒'}</span>
+        </div>`;
+
+      const modalHTML = `
+        <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
+          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:480px;">
+            <h2 style="margin:0 0 4px; color:var(--green);">${escapeHtml(name)}</h2>
+            <p style="color:#aaa; margin:0 0 16px;">${found.length} of ${species.length} found</p>
+            <div style="text-align:left;">
+              ${found.map(s => rowHtml(s, true)).join('')}
+              ${unfound.map(s => rowHtml(s, false)).join('')}
+            </div>
+            <button onclick="hideModal()" style="margin-top:20px;">Close</button>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      document.querySelector('.modal').style.display = 'flex';
+    }
+
+    /* ───────────────────────────────────────────────
        ACHIEVEMENTS
     ─────────────────────────────────────────────── */
     const ACHIEVEMENTS = [
+      // --- Collection (count-based) ---
       { id:'first',     section:'collection', icon:'🌼', name:'First Bloom',           desc:'Scan your first flower',                 check:f=>f.length>=1  },
       { id:'five',      section:'collection', icon:'🌸', name:'Daisy Chain',           desc:'Scan 5 different flowers',               check:f=>f.length>=5  },
       { id:'ten',       section:'collection', icon:'🏆', name:"Botanist's Apprentice", desc:'Reach 10 flowers in your collection',    check:f=>f.length>=10 },
       { id:'twentyfive',section:'collection', icon:'📚', name:'Field Researcher',      desc:'Reach 25 flowers in your collection',    check:f=>f.length>=25 },
 
+      // --- Botany (family-based) ---
       { id:'family3', section:'botany', icon:'🌿', name:'Family Tree',   desc:'Scan flowers from 3 different families', check:f => new Set(f.map(x=>x.family).filter(Boolean)).size>=3 },
       { id:'family5', section:'botany', icon:'🧬', name:'Taxonomy Buff', desc:'Scan flowers from 5 different families', check:f => new Set(f.map(x=>x.family).filter(Boolean)).size>=5 },
       { id:'aster5',  section:'botany', icon:'☀️', name:'Sun Catcher',   desc:'Scan 5 flowers from the daisy family (Asteraceae)', check:f => f.filter(x=>x.family==='Asteraceae').length>=5 },
+      { id:'apiSpec', section:'botany', icon:'🥕', name:'Carrot Family Specialist', desc:'Scan 3 Apiaceae (carrot/parsley family)', check:f => f.filter(x=>x.family==='Apiaceae').length>=3 },
 
-      { id:'homeTurf', section:'region', icon:'🏡', name:'Home Turf',          desc:'Scan 5 flowers within 1km of one spot', check:f=>{
+      // --- Region (biome-based) ---
+      { id:'homeTurf',  section:'region', icon:'🏡', name:'Home Turf',          desc:'Scan 5 flowers within 1km of one spot', check:f=>{
         const located = f.filter(x => x.location);
         return located.some(anchor =>
           located.filter(other => distanceKm(anchor.location, other.location) <= 1).length >= 5
         );
       }},
-      { id:'roamer',   section:'region', icon:'🗺️', name:'Roaming Naturalist', desc:'Scan flowers in 3 distinct locations',  check:f => uniquePlaces(f, 1).length >= 3 },
-      { id:'wanderer', section:'region', icon:'🌍', name:'Wanderer',           desc:'Scan two flowers more than 50km apart', check:f => {
+      { id:'roamer',    section:'region', icon:'🗺️', name:'Roaming Naturalist', desc:'Scan flowers in 3 distinct locations',  check:f => uniquePlaces(f, 1).length >= 3 },
+      { id:'wanderer',  section:'region', icon:'🌍', name:'Wanderer',           desc:'Scan two flowers more than 50km apart', check:f => {
         const located = f.filter(x => x.location);
         for (let i = 0; i < located.length; i++)
           for (let j = i+1; j < located.length; j++)
             if (distanceKm(located[i].location, located[j].location) > 50) return true;
         return false;
       }},
+      { id:'biome3',    section:'region', icon:'🌐', name:'Biome Hopper',  desc:'Scan flowers in 3 different California biomes', check:f => new Set(f.map(x=>x.biome).filter(b=>b && b!=='Outside CA' && b!=='Unknown')).size >= 3 },
+      { id:'biome5',    section:'region', icon:'🧭', name:'Biome Explorer', desc:'Scan flowers in 5 different California biomes', check:f => new Set(f.map(x=>x.biome).filter(b=>b && b!=='Outside CA' && b!=='Unknown')).size >= 5 },
+
+      // --- Mastery (master list driven) ---
+      { id:'firstRare',  section:'mastery', icon:'💎', name:'Rare Find',       desc:'Scan your first Rare-rated species', check:f => f.some(x => { const m = MASTER_FLOWERS.find(M => M.id === x.masterId); return m && m.rar === 'Rare'; }) },
+      { id:'firstEdi',   section:'mastery', icon:'🍴', name:'Forager',         desc:'Scan your first edible species',     check:f => f.some(x => { const m = MASTER_FLOWERS.find(M => M.id === x.masterId); return m && m.edi; }) },
+      { id:'firstTox',   section:'mastery', icon:'☠️', name:'Toxic Knowledge', desc:'Scan your first toxic species (look — don\'t touch)', check:f => f.some(x => { const m = MASTER_FLOWERS.find(M => M.id === x.masterId); return m && m.tox; }) },
+      { id:'native5',    section:'mastery', icon:'🌱', name:'Native Speaker',  desc:'Scan 5 California-native species',   check:f => f.filter(x => { const m = MASTER_FLOWERS.find(M => M.id === x.masterId); return m && m.nat; }).length >= 5 },
+      { id:'biome10',    section:'mastery', icon:'🥇', name:'Biome Champion',  desc:'Find 10 species in any single biome', check:f => {
+        const counts = getMasterCounts('bio');
+        return Object.values(counts).some(c => c.found >= 10);
+      }},
     ];
 
     function renderAchievements() {
       const list = document.getElementById('achievements-list');
       if (!list) return;
-      const sectionLabels = { collection:'Collection', botany:'Botany', region:'Region' };
+      const sectionLabels = { collection:'Collection', botany:'Botany', region:'Region', mastery:'Mastery' };
       let html = '', lastSection = null;
       ACHIEVEMENTS.forEach(a => {
         if (a.section !== lastSection) {
@@ -445,29 +665,20 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       if (!video.srcObject || !video.videoWidth) {
         return alert("Camera isn't ready yet — give it a moment after tapping Start Scan");
       }
-
-      // Pause + grab frame
       video.pause();
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
       const fullPhoto = canvas.toDataURL('image/jpeg', 0.85);
       stopCamera();
-
-      // Bounce UI back to landing immediately
       document.getElementById('scan-active').style.display = 'none';
       document.getElementById('scan-idle').style.display = 'flex';
-
-      // Resize for both API + storage (saves ~70% of tokens AND keeps IndexedDB lean)
       const resized = await resizeImage(fullPhoto, 1024).catch(() => fullPhoto);
-
-      // Identify (real AI if key set, mock otherwise)
       let ai;
       if (AI_CONFIG.apiKey()) {
         showLoading('Identifying flower…');
-        try {
-          ai = await aiIdentifyFlower(resized);
-        } catch (err) {
+        try { ai = await aiIdentifyFlower(resized); }
+        catch (err) {
           hideLoading();
           showToast(`⚠️ ${err.message}`, { error: true, duration: 5000 });
           return;
@@ -477,7 +688,6 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
         ai = mockAI();
         showToast('💡 No API key set — using mock result. Tap ⚙️ to add one.', { duration: 4500 });
       }
-
       await saveFlower(resized, ai);
       showToast(`✨ Added <strong>${escapeHtml(ai.commonName)}</strong> to your collection`);
     }
@@ -487,13 +697,11 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       document.getElementById('scan-active').style.display = 'flex';
       startCamera();
     }
-
     function cancelScan() {
       stopCamera();
       document.getElementById('scan-active').style.display = 'none';
       document.getElementById('scan-idle').style.display = 'flex';
     }
-
     function stopCamera() {
       if (currentStream) {
         currentStream.getTracks().forEach(t => t.stop());
@@ -501,10 +709,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       }
       const video = document.getElementById('preview');
       if (video) {
-        video.pause();
-        video.srcObject = null;
-        video.removeAttribute('src');
-        video.load();
+        video.pause(); video.srcObject = null;
+        video.removeAttribute('src'); video.load();
       }
     }
 
@@ -531,7 +737,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       AI_CONFIG.chatModel   = chat;
       closeSettings();
       showToast(key ? '✅ Settings saved' : '⚙️ Saved — no API key, using mock');
-      renderChat(); // refresh empty-state hint
+      renderChat();
     }
 
     /* ───────────────────────────────────────────────
@@ -541,9 +747,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const summary = flowers.length === 0
         ? 'The user has not yet collected any flowers.'
         : `The user has collected ${flowers.length} flower${flowers.length===1?'':'s'} so far:\n` +
-          flowers.slice(0, 50).map(f => `- ${f.common} (${f.scientific}, family ${f.family})`).join('\n');
-
-      return `You are a knowledgeable, friendly botanist assistant inside the FlowerDex app — a Pokédex-style personal flower collection tool. The user can ask anything: plant questions, foraging, edibility, recipes, general knowledge, etc. Be warm and concise. Reference their collection when relevant. Use plain text — no markdown headers or bullets unless truly helpful.
+          flowers.slice(0, 50).map(f => `- ${f.common} (${f.scientific}, family ${f.family}${f.biome ? ', biome ' + f.biome : ''})`).join('\n');
+      return `You are a knowledgeable, friendly botanist assistant inside the FlowerDex app — a Pokédex-style personal flower collection tool focused on California flora. The user can ask anything: plant questions, foraging, edibility, recipes, general knowledge, etc. Be warm and concise. Reference their collection when relevant. Use plain text — no markdown headers or bullets unless truly helpful.
 
 ${summary}`;
     }
@@ -552,16 +757,13 @@ ${summary}`;
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
-
       if (!AI_CONFIG.apiKey()) {
         showToast('⚠️ Add an API key in ⚙️ to chat.', { error: true });
         return;
       }
-
       input.value = '';
       chatMessages.push({ role: 'user', content: text });
       renderChat({ thinking: true });
-
       try {
         const response = await aiChat(chatMessages, buildSystemPrompt());
         chatMessages.push({ role: 'assistant', content: response });
@@ -574,7 +776,6 @@ ${summary}`;
     function renderChat({ thinking = false } = {}) {
       const container = document.getElementById('chat-messages');
       if (!container) return;
-
       if (chatMessages.length === 0 && !thinking) {
         container.innerHTML = `
           <div class="chat-empty">
@@ -583,13 +784,10 @@ ${summary}`;
           </div>`;
         return;
       }
-
       let html = chatMessages.map(m =>
         `<div class="chat-bubble ${m.role}">${escapeHtml(m.content)}</div>`
       ).join('');
-
       if (thinking) html += `<div class="chat-bubble assistant thinking">thinking…</div>`;
-
       container.innerHTML = html;
       container.scrollTop = container.scrollHeight;
     }
@@ -600,6 +798,9 @@ ${summary}`;
     function escapeHtml(s) {
       return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
     }
+    function escapeAttr(s) {
+      return String(s ?? '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
 
     /* ───────────────────────────────────────────────
        TAB NAV
@@ -609,9 +810,9 @@ ${summary}`;
       document.getElementById('tab'+n).classList.add('active');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
-
       if (n === 1) loadFlowers();
-      if (n === 3) renderChat();
+      if (n === 2) renderLogs();
+      if (n === 4) renderChat();
       if (n !== 0 && currentStream) cancelScan();
     }
 
@@ -623,20 +824,17 @@ ${summary}`;
 </head>
 <body>
 
-  <!-- Settings gear (always visible, top-right) -->
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
 
   <!-- Settings modal -->
   <div id="settings-modal" class="settings-modal" onclick="if(event.target.id==='settings-modal')closeSettings()">
     <div class="settings-content">
       <h2>⚙️ Settings</h2>
-
       <div class="input-row">
         <label>Anthropic API key</label>
         <input id="setting-apikey" type="password" placeholder="sk-ant-...">
         <small>Get one at <strong>console.anthropic.com</strong> → Settings → API Keys. Stored only on this device.</small>
       </div>
-
       <div class="input-row">
         <label>Vision model (flower ID)</label>
         <select id="setting-vision">
@@ -646,7 +844,6 @@ ${summary}`;
         </select>
         <small>Haiku is plenty for common flowers. Bump higher only if accuracy feels off.</small>
       </div>
-
       <div class="input-row">
         <label>Chat model</label>
         <select id="setting-chat">
@@ -655,13 +852,11 @@ ${summary}`;
           <option value="claude-opus-4-7">Opus 4.7 — most capable</option>
         </select>
       </div>
-
       <button onclick="saveSettings()">Save</button>
       <button onclick="closeSettings()" style="background:transparent; color:#aaa; border:1px solid #444;">Cancel</button>
     </div>
   </div>
 
-  <!-- Loading overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
     <div class="loading-text">Loading…</div>
@@ -669,7 +864,6 @@ ${summary}`;
 
   <!-- TAB 0: Scanner -->
   <div id="tab0" class="tab active">
-    <!-- IDLE STATE: pre-scan landing -->
     <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column;">
       <div style="margin-top:40px;">
         <div style="font-size:72px; line-height:1;">🌸</div>
@@ -682,8 +876,6 @@ ${summary}`;
         Nothing is ever sent to GitHub or any server.
       </div>
     </div>
-
-    <!-- ACTIVE STATE: camera + capture -->
     <div id="scan-active" style="display:none; padding:20px; text-align:center; min-height:100vh; flex-direction:column;">
       <h1 style="color:var(--green); margin:0 0 10px;">🌸 FlowerDex</h1>
       <p style="margin:0 0 10px; color:#cfe;">Frame the flower and tap capture</p>
@@ -699,14 +891,26 @@ ${summary}`;
     <div id="collection"></div>
   </div>
 
-  <!-- TAB 2: Achievements -->
+  <!-- TAB 2: Logs (NEW — biome + family progress) -->
   <div id="tab2" class="tab">
+    <h2 style="padding:20px 20px 0; color:var(--green);">Logs</h2>
+    <p style="padding:0 20px; color:#aaa; font-size:13px; margin:6px 0 0;">Progress against the California master list (300 species)</p>
+    <div class="sub-tabs">
+      <div class="sub-tab-btn active" data-pane="biome"  onclick="switchLogPane('biome')">By Biome</div>
+      <div class="sub-tab-btn"        data-pane="family" onclick="switchLogPane('family')">By Family</div>
+    </div>
+    <div id="pane-biome"  class="sub-pane active" style="margin-top:14px;"></div>
+    <div id="pane-family" class="sub-pane"        style="margin-top:14px;"></div>
+  </div>
+
+  <!-- TAB 3: Achievements -->
+  <div id="tab3" class="tab">
     <h2 style="padding:20px 20px 0; color:var(--green);">Achievements</h2>
     <div id="achievements-list"></div>
   </div>
 
-  <!-- TAB 3: Chat -->
-  <div id="tab3" class="tab">
+  <!-- TAB 4: Chat -->
+  <div id="tab4" class="tab">
     <div class="chat-container">
       <div class="chat-header">Botanist AI</div>
       <div id="chat-messages" class="chat-messages"></div>
@@ -717,12 +921,12 @@ ${summary}`;
     </div>
   </div>
 
-  <!-- Bottom tabs -->
   <div class="tabs">
     <div class="tab-btn active" onclick="switchTab(0)">Scan</div>
     <div class="tab-btn" onclick="switchTab(1)">Collection</div>
-    <div class="tab-btn" onclick="switchTab(2)">Achievements</div>
-    <div class="tab-btn" onclick="switchTab(3)">Chat</div>
+    <div class="tab-btn" onclick="switchTab(2)">Logs</div>
+    <div class="tab-btn" onclick="switchTab(3)">Achievements</div>
+    <div class="tab-btn" onclick="switchTab(4)">Chat</div>
   </div>
 
 </body>
