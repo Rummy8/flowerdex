@@ -47,10 +47,17 @@
     .ach-check { font-size:22px; min-width:24px; text-align:right; color:var(--green); }
     .ach-section { padding:18px 20px 4px; color:var(--muted); font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
 
-    /* Sub-tab toggle (used inside Logs/Achievements tab) */
-    .sub-tabs { display:flex; gap:4px; padding:14px 14px 0; }
-    .sub-tab-btn { flex:1; padding:10px; background:var(--panel); color:#aaa; border-radius:9999px; text-align:center; font-weight:bold; cursor:pointer; font-size:13px; }
-    .sub-tab-btn.active { background:var(--green); color:var(--dark); }
+    /* Category grid — used by Achievements + Logs tabs */
+    .cat-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
+    .cat-card { background:var(--panel); border-radius:14px; padding:18px 16px; cursor:pointer; aspect-ratio:1 / 1; display:flex; flex-direction:column; justify-content:space-between; transition: background 0.2s, transform 0.1s; }
+    .cat-card:active { transform:scale(0.97); }
+    .cat-card.complete { background:#0a3d1f; border:2px solid var(--green); }
+    .cat-card .cat-icon { font-size:38px; line-height:1; }
+    .cat-card .cat-name { font-weight:bold; font-size:18px; color:white; margin-top:8px; }
+    .cat-card.complete .cat-name { color:var(--green); }
+    .cat-card .cat-count { color:#aaa; font-size:13px; margin:4px 0 8px; }
+    .cat-card.complete .cat-count { color:var(--muted); }
+
     .sub-pane { display:none; }
     .sub-pane.active { display:block; }
 
@@ -63,6 +70,9 @@
     .log-row-head .count { color:#aaa; font-size:13px; }
     .progress-bar { height:8px; background:var(--panel-deep); border-radius:9999px; overflow:hidden; }
     .progress-fill { height:100%; background:var(--green); transition: width 0.5s; border-radius:9999px; }
+
+    /* Back button (inside drill-down views) */
+    .back-btn { background:transparent; color:var(--green); border:1px solid var(--green); width:auto; padding:8px 16px; margin:14px 14px 0; border-radius:9999px; font-size:14px; cursor:pointer; }
 
     /* Species list (inside log detail modal) */
     .species-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #1a3d2a; text-align:left; cursor:pointer; transition: background 0.15s; }
@@ -363,6 +373,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       await db.setItem('flowers', flowers);
       renderCollection();
       renderLogs();
+      renderAchievements();
       checkAchievements();
     }
 
@@ -456,13 +467,6 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
        LOGS — Biome view + Family view
        Shows progress against master list.
     ─────────────────────────────────────────────── */
-    let activeLogPane = 'biome'; // 'biome' | 'family'
-
-    function switchLogPane(pane) {
-      activeLogPane = pane;
-      document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.pane === pane));
-      document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + pane));
-    }
 
     function getMasterCounts(field) {
       // Return { [bucketName]: { total, found, foundIds } }
@@ -483,19 +487,57 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       return totals;
     }
 
+    /* ───────────────────────────────────────────────
+       LOGS — top-level category cards (By Biome / By Family)
+       Tap a card to drill down into the list view.
+    ─────────────────────────────────────────────── */
     function renderLogs() {
-      renderBiomeLog();
-      renderFamilyLog();
+      const tab = document.getElementById('tab2');
+      if (!tab) return;
+
+      // Compute progress totals for the category cards
+      const biomeCounts  = getMasterCounts('bio');
+      const familyCounts = getMasterCounts('fam');
+
+      const totalBiomeFound  = Object.values(biomeCounts).reduce((s, c) => s + c.found, 0);
+      const totalBiomeTotal  = Object.values(biomeCounts).reduce((s, c) => s + c.total, 0);
+      const totalFamFound    = Object.values(familyCounts).reduce((s, c) => s + c.found, 0);
+      const totalFamTotal    = Object.values(familyCounts).reduce((s, c) => s + c.total, 0);
+
+      const card = (icon, name, found, total, onClick) => {
+        const pct = total > 0 ? Math.round((found / total) * 100) : 0;
+        const complete = found === total && total > 0;
+        return `
+          <div class="cat-card ${complete ? 'complete' : ''}" onclick="${onClick}">
+            <div>
+              <div class="cat-icon">${icon}</div>
+              <div class="cat-name">${name} ${complete ? '✓' : ''}</div>
+              <div class="cat-count">${found} / ${total} (${pct}%)</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>`;
+      };
+
+      tab.innerHTML = `
+        <h2 style="padding:20px 20px 0; color:var(--green);">Logs</h2>
+        <p style="padding:0 20px; color:#aaa; font-size:13px; margin:6px 0 0;">Progress against the California master list (300 species)</p>
+        <div class="cat-grid">
+          ${card('🌐', 'By Biome',  totalBiomeFound, totalBiomeTotal, "openLogDrillDown('bio')")}
+          ${card('🧬', 'By Family', totalFamFound,   totalFamTotal,   "openLogDrillDown('fam')")}
+        </div>`;
     }
 
-    function renderLogRows(counts, type) {
-      // type is 'bio' or 'fam' — used so detail modal knows which field to filter by
+    function openLogDrillDown(field) {
+      const tab = document.getElementById('tab2');
+      if (!tab) return;
+      const counts = getMasterCounts(field);
+      const heading = field === 'bio' ? 'By Biome' : 'By Family';
       const sorted = Object.entries(counts).sort((a, b) => b[1].total - a[1].total);
-      return sorted.map(([name, c]) => {
+      const rows = sorted.map(([name, c]) => {
         const pct = Math.round((c.found / c.total) * 100);
         const complete = c.found === c.total;
         return `
-          <div class="log-row ${complete ? 'complete' : ''}" onclick="showLogDetail('${type}', '${escapeAttr(name)}')">
+          <div class="log-row ${complete ? 'complete' : ''}" onclick="showLogDetail('${field}', '${escapeAttr(name)}')">
             <div class="log-row-head">
               <span class="name">${escapeHtml(name)} ${complete ? '✓' : ''}</span>
               <span class="count">${c.found} / ${c.total} (${pct}%)</span>
@@ -503,18 +545,11 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
           </div>`;
       }).join('');
-    }
 
-    function renderBiomeLog() {
-      const el = document.getElementById('pane-biome');
-      if (!el) return;
-      el.innerHTML = renderLogRows(getMasterCounts('bio'), 'bio');
-    }
-
-    function renderFamilyLog() {
-      const el = document.getElementById('pane-family');
-      if (!el) return;
-      el.innerHTML = renderLogRows(getMasterCounts('fam'), 'fam');
+      tab.innerHTML = `
+        <button class="back-btn" onclick="renderLogs()">← Logs</button>
+        <h2 style="padding:14px 20px 0; color:var(--green);">${heading}</h2>
+        <div style="margin-top:6px;">${rows}</div>`;
     }
 
     function showLogDetail(field, name) {
@@ -724,24 +759,75 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       }},
     ];
 
-    function renderAchievements() {
-      const list = document.getElementById('achievements-list');
-      if (!list) return;
-      const sectionLabels = { collection:'Collection', botany:'Botany', region:'Region', mastery:'Mastery' };
-      let html = '', lastSection = null;
+    /* ───────────────────────────────────────────────
+       ACHIEVEMENTS — top-level category cards
+       Tap a card → drill down to that section's list.
+    ─────────────────────────────────────────────── */
+    const ACH_SECTION_META = {
+      collection: { label:'Collection', icon:'📚' },
+      botany:     { label:'Botany',     icon:'🧬' },
+      region:     { label:'Region',     icon:'🗺️' },
+      mastery:    { label:'Mastery',    icon:'🏆' },
+    };
+
+    async function renderAchievements() {
+      const tab = document.getElementById('tab3');
+      if (!tab) return;
+
+      // Compute unlocked counts per section
+      const unlockedSet = new Set(await db.getItem('unlocked') || []);
+      const sectionStats = {};
       ACHIEVEMENTS.forEach(a => {
-        if (a.section !== lastSection) {
-          html += `<div class="ach-section">${sectionLabels[a.section] || a.section}</div>`;
-          lastSection = a.section;
-        }
-        html += `
-          <div id="ach-${a.id}" class="ach-item">
+        if (!sectionStats[a.section]) sectionStats[a.section] = { total: 0, unlocked: 0 };
+        sectionStats[a.section].total++;
+        // Use stored "seen" set so the count survives reloads even if the user
+        // navigated away before saveFlower ran. Recheck live for fresh state.
+        if (a.check(flowers) || unlockedSet.has(a.id)) sectionStats[a.section].unlocked++;
+      });
+
+      const sectionOrder = ['collection', 'botany', 'region', 'mastery'];
+      const cards = sectionOrder.filter(s => sectionStats[s]).map(s => {
+        const meta = ACH_SECTION_META[s] || { label: s, icon: '🏅' };
+        const stat = sectionStats[s];
+        const pct = stat.total > 0 ? Math.round((stat.unlocked / stat.total) * 100) : 0;
+        const complete = stat.unlocked === stat.total && stat.total > 0;
+        return `
+          <div class="cat-card ${complete ? 'complete' : ''}" onclick="openAchievementSection('${s}')">
+            <div>
+              <div class="cat-icon">${meta.icon}</div>
+              <div class="cat-name">${meta.label} ${complete ? '✓' : ''}</div>
+              <div class="cat-count">${stat.unlocked} / ${stat.total} unlocked</div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>`;
+      }).join('');
+
+      tab.innerHTML = `
+        <h2 style="padding:20px 20px 0; color:var(--green);">Achievements</h2>
+        <p style="padding:0 20px; color:#aaa; font-size:13px; margin:6px 0 0;">Tap a category to see what's inside</p>
+        <div class="cat-grid">${cards}</div>`;
+    }
+
+    function openAchievementSection(section) {
+      const tab = document.getElementById('tab3');
+      if (!tab) return;
+      const meta = ACH_SECTION_META[section] || { label: section, icon: '🏅' };
+      const items = ACHIEVEMENTS.filter(a => a.section === section);
+
+      const rowsHtml = items.map(a => {
+        const isUnlocked = a.check(flowers);
+        return `
+          <div id="ach-${a.id}" class="ach-item ${isUnlocked ? 'unlocked' : ''}">
             <span style="font-size:28px;">${a.icon || '🏅'}</span>
             <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
-            <span class="ach-check"></span>
+            <span class="ach-check">${isUnlocked ? '✅' : ''}</span>
           </div>`;
-      });
-      list.innerHTML = html;
+      }).join('');
+
+      tab.innerHTML = `
+        <button class="back-btn" onclick="renderAchievements()">← Achievements</button>
+        <h2 style="padding:14px 20px 0; color:var(--green);">${meta.icon} ${meta.label}</h2>
+        <div style="margin-top:6px;">${rowsHtml}</div>`;
     }
 
     async function checkAchievements({ silent = false } = {}) {
@@ -957,6 +1043,7 @@ ${summary}`;
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
       if (n === 1) loadFlowers();
       if (n === 2) renderLogs();
+      if (n === 3) renderAchievements();
       if (n === 4) renderChat();
       if (n !== 0 && currentStream) cancelScan();
     }
@@ -1036,23 +1123,11 @@ ${summary}`;
     <div id="collection"></div>
   </div>
 
-  <!-- TAB 2: Logs (NEW — biome + family progress) -->
-  <div id="tab2" class="tab">
-    <h2 style="padding:20px 20px 0; color:var(--green);">Logs</h2>
-    <p style="padding:0 20px; color:#aaa; font-size:13px; margin:6px 0 0;">Progress against the California master list (300 species)</p>
-    <div class="sub-tabs">
-      <div class="sub-tab-btn active" data-pane="biome"  onclick="switchLogPane('biome')">By Biome</div>
-      <div class="sub-tab-btn"        data-pane="family" onclick="switchLogPane('family')">By Family</div>
-    </div>
-    <div id="pane-biome"  class="sub-pane active" style="margin-top:14px;"></div>
-    <div id="pane-family" class="sub-pane"        style="margin-top:14px;"></div>
-  </div>
+  <!-- TAB 2: Logs (category cards: By Biome / By Family) -->
+  <div id="tab2" class="tab"></div>
 
-  <!-- TAB 3: Achievements -->
-  <div id="tab3" class="tab">
-    <h2 style="padding:20px 20px 0; color:var(--green);">Achievements</h2>
-    <div id="achievements-list"></div>
-  </div>
+  <!-- TAB 3: Achievements (category cards) -->
+  <div id="tab3" class="tab"></div>
 
   <!-- TAB 4: Chat -->
   <div id="tab4" class="tab">
