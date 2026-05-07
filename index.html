@@ -5,72 +5,235 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FlowerDex</title>
   <style>
-    :root { --green: #4ade80; }
-    body { margin:0; font-family: system-ui; background:#052e16; color:white; }
+    :root { --green: #4ade80; --dark: #052e16; --panel: #0f3d2a; --panel-deep: #0a2218; }
+    body { margin:0; font-family: system-ui; background:var(--dark); color:white; }
     .tab { display:none; }
     .tab.active { display:block; }
-    .tabs { position:fixed; bottom:0; width:100%; display:flex; background:#0f3d2a; }
-    .tab-btn { flex:1; padding:15px; text-align:center; color:white; }
-    .tab-btn.active { background:#4ade80; color:#052e16; }
-    .card { background:#0f3d2a; margin:15px; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:14px; }
+    .tabs { position:fixed; bottom:0; width:100%; display:flex; background:var(--panel); z-index:800; }
+    .tab-btn { flex:1; padding:15px; text-align:center; color:white; cursor:pointer; }
+    .tab-btn.active { background:var(--green); color:var(--dark); }
+    button { background:var(--green); color:var(--dark); border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; cursor:pointer; }
+    .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:var(--panel-deep); }
+
+    /* Collection cards */
+    .card { background:var(--panel); margin:15px; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:14px; }
     .card-text { flex:1; min-width:0; text-align:left; }
     .card-text h3 { margin:0 0 4px; font-size:18px; }
     .card-text .sci { display:block; font-style:italic; color:#cfe; font-size:14px; margin-bottom:6px; }
     .card-text .date { color:#aaa; font-size:12px; }
     .thumb { width:96px; height:96px; object-fit:cover; border-radius:10px; flex-shrink:0; }
-    button { background:#4ade80; color:#052e16; border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; }
-    .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:#0a2218; }
 
-    /* Modal */
+    /* Detail modal */
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
-    .modal-content { background:#0f3d2a; max-width:90%; border-radius:16px; padding:20px; text-align:center; }
+    .modal-content { background:var(--panel); max-width:90%; border-radius:16px; padding:20px; text-align:center; }
     .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
 
     /* Achievements */
-    .ach-item { display:flex; align-items:center; gap:12px; background:#0f3d2a; margin:12px; padding:15px; border-radius:12px; transition: background 0.4s, color 0.4s; }
-    .ach-item.unlocked { background:#0a3d1f; color: var(--green); }
-    .ach-item.unlocked .ach-body strong { color: var(--green); }
+    .ach-item { display:flex; align-items:center; gap:12px; background:var(--panel); margin:12px; padding:15px; border-radius:12px; transition: background 0.4s, color 0.4s; }
+    .ach-item.unlocked { background:#0a3d1f; color:var(--green); }
+    .ach-item.unlocked .ach-body strong { color:var(--green); }
     .ach-item .ach-body { flex:1; text-align:left; }
     .ach-item .ach-body small { color:#aaa; }
     .ach-item.unlocked .ach-body small { color:#86efac; }
     .ach-check { font-size:22px; min-width:24px; text-align:right; color:var(--green); }
-    .ach-section { padding: 18px 20px 4px; color:#86efac; font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
+    .ach-section { padding:18px 20px 4px; color:#86efac; font-size:13px; letter-spacing:1px; text-transform:uppercase; opacity:0.8; }
 
     /* Toast banner */
-    .toast { position:fixed; top:20px; left:50%; transform: translate(-50%, -150%); background: var(--green); color:#052e16; padding:14px 22px; border-radius:9999px; font-weight:bold; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 2000; transition: transform 0.4s ease; max-width: 90%; text-align:center; }
-    .toast.show { transform: translate(-50%, 0); }
+    .toast { position:fixed; top:20px; left:50%; transform:translate(-50%, -150%); background:var(--green); color:var(--dark); padding:14px 22px; border-radius:9999px; font-weight:bold; box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:2000; transition:transform 0.4s ease; max-width:90%; text-align:center; }
+    .toast.show { transform:translate(-50%, 0); }
+    .toast.error { background:#fca5a5; color:#450a0a; }
+
+    /* Settings gear button (top-right, always visible) */
+    .gear-btn { position:fixed; top:12px; right:12px; background:rgba(15,61,42,0.92); color:var(--green); border:1px solid var(--green); width:42px; height:42px; padding:0; margin:0; border-radius:50%; font-size:20px; z-index:900; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    /* Settings modal */
+    .settings-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px; }
+    .settings-modal.show { display:flex; }
+    .settings-content { background:var(--panel); max-width:420px; width:100%; border-radius:16px; padding:24px; max-height:90vh; overflow-y:auto; box-sizing:border-box; }
+    .settings-content h2 { color:var(--green); margin:0 0 20px; }
+    .input-row { margin-bottom:20px; text-align:left; }
+    .input-row label { display:block; color:var(--green); font-size:14px; font-weight:bold; margin-bottom:6px; }
+    .input-row input, .input-row select { width:100%; box-sizing:border-box; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:8px; padding:12px; font-size:16px; }
+    .input-row small { display:block; color:#aaa; font-size:12px; margin-top:6px; line-height:1.4; }
+    .settings-content button { width:100%; }
+
+    /* Loading overlay (during AI identification) */
+    .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1500; align-items:center; justify-content:center; flex-direction:column; gap:20px; }
+    .loading-overlay.show { display:flex; }
+    .spinner { width:60px; height:60px; border:5px solid #1a3d2a; border-top-color:var(--green); border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-text { color:var(--green); font-weight:bold; font-size:18px; }
+
+    /* Chat */
+    .chat-container { display:flex; flex-direction:column; height:100vh; padding-bottom:56px; box-sizing:border-box; }
+    .chat-header { padding:14px 60px 12px 20px; color:var(--green); font-size:22px; font-weight:bold; flex-shrink:0; border-bottom:1px solid #1a3d2a; }
+    .chat-messages { flex:1; overflow-y:auto; padding:16px 14px; }
+    .chat-empty { text-align:center; padding:60px 20px; color:#aaa; line-height:1.5; }
+    .chat-bubble { max-width:82%; padding:10px 14px; margin-bottom:10px; border-radius:14px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
+    .chat-bubble.user { background:var(--green); color:var(--dark); margin-left:auto; border-bottom-right-radius:4px; }
+    .chat-bubble.assistant { background:var(--panel); color:white; margin-right:auto; border-bottom-left-radius:4px; }
+    .chat-bubble.thinking { color:#aaa; font-style:italic; }
+    .chat-input-row { display:flex; gap:8px; padding:10px 12px; background:var(--panel-deep); border-top:1px solid #1a3d2a; flex-shrink:0; }
+    .chat-input-row input { flex:1; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:9999px; padding:12px 16px; font-size:16px; outline:none; }
+    .chat-send { width:auto; padding:10px 20px; margin:0; flex-shrink:0; }
   </style>
   <script src="https://unpkg.com/localforage@1.10.0/dist/localforage.min.js"></script>
   <script>
+    /* ───────────────────────────────────────────────
+       STATE
+    ─────────────────────────────────────────────── */
     let flowers = [];
-    const db = localforage.createInstance({ name: "flowerdex" });
+    let chatMessages = [];
     let currentStream = null;
+    const db = localforage.createInstance({ name: "flowerdex" });
 
-    function renderAchievements() {
-      const list = document.getElementById('achievements-list');
-      if (!list) return;
-      const sections = {
-        collection: 'Collection',
-        botany:     'Botany',
-        region:     'Region',
-      };
-      let html = '';
-      let lastSection = null;
-      ACHIEVEMENTS.forEach(a => {
-        if (a.section !== lastSection) {
-          html += `<div class="ach-section">${sections[a.section] || a.section}</div>`;
-          lastSection = a.section;
+    /* ───────────────────────────────────────────────
+       AI CONFIG + PROVIDER ABSTRACTION
+       Forward-compatible: add new provider keys
+       (ollama, webllm, etc.) without touching the
+       rest of the app.
+    ─────────────────────────────────────────────── */
+    const AI_CONFIG = {
+      provider: 'claude', // future: 'ollama' | 'webllm'
+      visionModel: localStorage.getItem('flowerdex_vision_model') || 'claude-haiku-4-5-20251001',
+      chatModel:   localStorage.getItem('flowerdex_chat_model')   || 'claude-haiku-4-5-20251001',
+      apiKey: () => localStorage.getItem('flowerdex_apikey') || '',
+    };
+
+    const aiProviders = {
+      claude: {
+        async identifyFlower(imageBase64) {
+          const apiKey = AI_CONFIG.apiKey();
+          if (!apiKey) throw new Error('No API key set. Tap ⚙️ to add one.');
+
+          const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+
+          const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+              'anthropic-dangerous-direct-browser-access': 'true',
+            },
+            body: JSON.stringify({
+              model: AI_CONFIG.visionModel,
+              max_tokens: 500,
+              messages: [{
+                role: 'user',
+                content: [
+                  { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Data } },
+                  { type: 'text', text:
+`Identify this flower. Respond ONLY with valid JSON, no markdown fences, no preamble:
+{
+  "scientificName": "Latin binomial",
+  "commonName": "common english name",
+  "family": "scientific family name (e.g. Asteraceae)",
+  "tidbit": "one or two short sentences: edibility, toxicity, or notable use"
+}
+If the image does not contain a flower, respond with: {"error":"not a flower"}`
+                  }
+                ]
+              }]
+            })
+          });
+
+          if (!res.ok) {
+            if (res.status === 401) throw new Error('Invalid API key. Check ⚙️ settings.');
+            if (res.status === 429) throw new Error('Rate limit hit. Wait a moment.');
+            const t = await res.text();
+            throw new Error(`API error (${res.status}): ${t.slice(0, 120)}`);
+          }
+
+          const data = await res.json();
+          const text = data.content?.[0]?.text || '';
+          const cleaned = text.replace(/^```json\s*|^```\s*|```\s*$/g, '').trim();
+
+          let parsed;
+          try { parsed = JSON.parse(cleaned); }
+          catch (e) { throw new Error('AI returned an unreadable response. Try again.'); }
+
+          if (parsed.error) throw new Error(parsed.error);
+          return parsed;
+        },
+
+        async chat(messages, systemPrompt) {
+          const apiKey = AI_CONFIG.apiKey();
+          if (!apiKey) throw new Error('No API key set. Tap ⚙️ to add one.');
+
+          const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+              'anthropic-dangerous-direct-browser-access': 'true',
+            },
+            body: JSON.stringify({
+              model: AI_CONFIG.chatModel,
+              max_tokens: 1024,
+              system: systemPrompt,
+              messages: messages,
+            })
+          });
+
+          if (!res.ok) {
+            if (res.status === 401) throw new Error('Invalid API key.');
+            if (res.status === 429) throw new Error('Rate limit hit.');
+            throw new Error(`API error (${res.status})`);
+          }
+
+          const data = await res.json();
+          return data.content?.[0]?.text || '(no response)';
         }
-        html += `
-          <div id="ach-${a.id}" class="ach-item">
-            <span style="font-size:28px;">${a.icon || '🏅'}</span>
-            <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
-            <span class="ach-check"></span>
-          </div>`;
-      });
-      list.innerHTML = html;
+      },
+      // Future providers slot in here:
+      // ollama: { identifyFlower(...) {...}, chat(...) {...} },
+      // webllm: { identifyFlower(...) {...}, chat(...) {...} },
+    };
+
+    async function aiIdentifyFlower(imageBase64) {
+      return aiProviders[AI_CONFIG.provider].identifyFlower(imageBase64);
+    }
+    async function aiChat(messages, systemPrompt) {
+      return aiProviders[AI_CONFIG.provider].chat(messages, systemPrompt);
     }
 
+    /* ───────────────────────────────────────────────
+       IMAGE HELPER — resize before API to save tokens
+    ─────────────────────────────────────────────── */
+    function resizeImage(base64, maxDim = 1024) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else if (h > maxDim)     { w = Math.round(w * maxDim / h); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = reject;
+        img.src = base64;
+      });
+    }
+
+    /* ───────────────────────────────────────────────
+       MOCK AI — fallback when no API key set
+    ─────────────────────────────────────────────── */
+    function mockAI() {
+      return {
+        scientificName: "Taraxacum officinale",
+        commonName: "Dandelion",
+        family: "Asteraceae",
+        tidbit: "Edible & medicinal — high in vitamins A/C/K. Tea aids digestion. Safe to touch."
+      };
+    }
+
+    /* ───────────────────────────────────────────────
+       FLOWER COLLECTION
+    ─────────────────────────────────────────────── */
     async function loadFlowers() {
       flowers = await db.getItem('flowers') || [];
       renderCollection();
@@ -96,15 +259,176 @@
       checkAchievements();
     }
 
-    function mockAI() {
-      return {
-        scientificName: "Taraxacum officinale",
-        commonName: "Dandelion",
-        family: "Asteraceae",
-        tidbit: "Edible & medicinal — high in vitamins A/C/K. Tea helps digestion. Safe to touch."
-      };
+    function renderCollection() {
+      const container = document.getElementById('collection');
+      container.innerHTML = flowers.length === 0
+        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
+        : flowers.map(f => `
+          <div class="card" onclick="showDetail(${f.id})">
+            <div class="card-text">
+              <h3>${escapeHtml(f.common)}</h3>
+              <span class="sci">${escapeHtml(f.scientific)}</span>
+              <span class="date">${new Date(f.timestamp).toLocaleDateString()}</span>
+            </div>
+            <img src="${f.photo}" class="thumb">
+          </div>
+        `).join('');
     }
 
+    function showDetail(id) {
+      const flower = flowers.find(f => f.id === id);
+      if (!flower) return;
+      const modalHTML = `
+        <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
+          <div class="modal-content" onclick="event.stopImmediatePropagation()">
+            <img src="${flower.photo}" alt="${escapeHtml(flower.common)}">
+            <h2>${escapeHtml(flower.common)}</h2>
+            <i>${escapeHtml(flower.scientific)}</i>
+            <p><strong>Family:</strong> ${escapeHtml(flower.family)}</p>
+            <p>${escapeHtml(flower.tidbit)}</p>
+            <small>Scanned: ${new Date(flower.timestamp).toLocaleDateString()}</small>
+            <button onclick="hideModal()" style="margin-top:20px;">Close</button>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      document.querySelector('.modal').style.display = 'flex';
+    }
+
+    function hideModal() {
+      const modal = document.querySelector('.modal');
+      if (modal) modal.remove();
+    }
+
+    /* ───────────────────────────────────────────────
+       GEOLOCATION + DISTANCE HELPERS
+    ─────────────────────────────────────────────── */
+    function getLocation() {
+      if (!navigator.geolocation) return Promise.resolve(null);
+      return new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          ()  => resolve(null),
+          { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
+        );
+      });
+    }
+
+    function distanceKm(a, b) {
+      const R = 6371, toRad = d => d * Math.PI / 180;
+      const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+      const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+      const x = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(x));
+    }
+
+    function uniquePlaces(flowers, radiusKm = 1) {
+      const located = flowers.filter(f => f.location);
+      const places = [];
+      for (const f of located) {
+        if (!places.some(p => distanceKm(p, f.location) <= radiusKm)) places.push(f.location);
+      }
+      return places;
+    }
+
+    /* ───────────────────────────────────────────────
+       ACHIEVEMENTS
+    ─────────────────────────────────────────────── */
+    const ACHIEVEMENTS = [
+      { id:'first',     section:'collection', icon:'🌼', name:'First Bloom',           desc:'Scan your first flower',                 check:f=>f.length>=1  },
+      { id:'five',      section:'collection', icon:'🌸', name:'Daisy Chain',           desc:'Scan 5 different flowers',               check:f=>f.length>=5  },
+      { id:'ten',       section:'collection', icon:'🏆', name:"Botanist's Apprentice", desc:'Reach 10 flowers in your collection',    check:f=>f.length>=10 },
+      { id:'twentyfive',section:'collection', icon:'📚', name:'Field Researcher',      desc:'Reach 25 flowers in your collection',    check:f=>f.length>=25 },
+
+      { id:'family3', section:'botany', icon:'🌿', name:'Family Tree',   desc:'Scan flowers from 3 different families', check:f => new Set(f.map(x=>x.family).filter(Boolean)).size>=3 },
+      { id:'family5', section:'botany', icon:'🧬', name:'Taxonomy Buff', desc:'Scan flowers from 5 different families', check:f => new Set(f.map(x=>x.family).filter(Boolean)).size>=5 },
+      { id:'aster5',  section:'botany', icon:'☀️', name:'Sun Catcher',   desc:'Scan 5 flowers from the daisy family (Asteraceae)', check:f => f.filter(x=>x.family==='Asteraceae').length>=5 },
+
+      { id:'homeTurf', section:'region', icon:'🏡', name:'Home Turf',          desc:'Scan 5 flowers within 1km of one spot', check:f=>{
+        const located = f.filter(x => x.location);
+        return located.some(anchor =>
+          located.filter(other => distanceKm(anchor.location, other.location) <= 1).length >= 5
+        );
+      }},
+      { id:'roamer',   section:'region', icon:'🗺️', name:'Roaming Naturalist', desc:'Scan flowers in 3 distinct locations',  check:f => uniquePlaces(f, 1).length >= 3 },
+      { id:'wanderer', section:'region', icon:'🌍', name:'Wanderer',           desc:'Scan two flowers more than 50km apart', check:f => {
+        const located = f.filter(x => x.location);
+        for (let i = 0; i < located.length; i++)
+          for (let j = i+1; j < located.length; j++)
+            if (distanceKm(located[i].location, located[j].location) > 50) return true;
+        return false;
+      }},
+    ];
+
+    function renderAchievements() {
+      const list = document.getElementById('achievements-list');
+      if (!list) return;
+      const sectionLabels = { collection:'Collection', botany:'Botany', region:'Region' };
+      let html = '', lastSection = null;
+      ACHIEVEMENTS.forEach(a => {
+        if (a.section !== lastSection) {
+          html += `<div class="ach-section">${sectionLabels[a.section] || a.section}</div>`;
+          lastSection = a.section;
+        }
+        html += `
+          <div id="ach-${a.id}" class="ach-item">
+            <span style="font-size:28px;">${a.icon || '🏅'}</span>
+            <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
+            <span class="ach-check"></span>
+          </div>`;
+      });
+      list.innerHTML = html;
+    }
+
+    async function checkAchievements({ silent = false } = {}) {
+      const seen = await db.getItem('unlocked') || [];
+      const newlyUnlocked = [];
+      ACHIEVEMENTS.forEach(a => {
+        const isUnlocked = a.check(flowers);
+        const row = document.getElementById('ach-' + a.id);
+        if (row) {
+          row.classList.toggle('unlocked', isUnlocked);
+          const check = row.querySelector('.ach-check');
+          if (check) check.textContent = isUnlocked ? '✅' : '';
+        }
+        if (isUnlocked && !seen.includes(a.id)) {
+          newlyUnlocked.push(a);
+          seen.push(a.id);
+        }
+      });
+      await db.setItem('unlocked', seen);
+      if (!silent) {
+        newlyUnlocked.forEach((a, i) => setTimeout(() =>
+          showToast(`🏆 Achievement Unlocked: <strong>${a.name}</strong>`), i * 600));
+      }
+    }
+
+    /* ───────────────────────────────────────────────
+       TOAST + LOADING OVERLAY
+    ─────────────────────────────────────────────── */
+    function showToast(message, opts = {}) {
+      const toast = document.createElement('div');
+      toast.className = 'toast' + (opts.error ? ' error' : '');
+      toast.innerHTML = message;
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      }, opts.duration || 3000);
+    }
+
+    function showLoading(message = 'Loading…') {
+      const overlay = document.getElementById('loading-overlay');
+      overlay.querySelector('.loading-text').textContent = message;
+      overlay.classList.add('show');
+    }
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('show');
+    }
+
+    /* ───────────────────────────────────────────────
+       SCANNER + CAMERA
+    ─────────────────────────────────────────────── */
     async function startCamera() {
       const video = document.getElementById('preview');
       try {
@@ -122,173 +446,40 @@
         return alert("Camera isn't ready yet — give it a moment after tapping Start Scan");
       }
 
+      // Pause + grab frame
       video.pause();
-
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
-
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      const fullPhoto = canvas.toDataURL('image/jpeg', 0.85);
       stopCamera();
 
-      const ai = mockAI();
-      await saveFlower(photoBase64, ai);
-      showToast(`✨ Added <strong>${ai.commonName}</strong> to your collection`);
-
+      // Bounce UI back to landing immediately
       document.getElementById('scan-active').style.display = 'none';
       document.getElementById('scan-idle').style.display = 'flex';
-    }
 
-    function renderCollection() {
-      const container = document.getElementById('collection');
-      container.innerHTML = flowers.length === 0
-        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
-        : flowers.map(f => `
-          <div class="card" onclick="showDetail(${f.id})">
-            <div class="card-text">
-              <h3>${f.common}</h3>
-              <span class="sci">${f.scientific}</span>
-              <span class="date">${new Date(f.timestamp).toLocaleDateString()}</span>
-            </div>
-            <img src="${f.photo}" class="thumb">
-          </div>
-        `).join('');
-    }
+      // Resize for both API + storage (saves ~70% of tokens AND keeps IndexedDB lean)
+      const resized = await resizeImage(fullPhoto, 1024).catch(() => fullPhoto);
 
-    function showDetail(id) {
-      const flower = flowers.find(f => f.id === id);
-      if (!flower) return;
-
-      const modalHTML = `
-        <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
-          <div class="modal-content" onclick="event.stopImmediatePropagation()">
-            <img src="${flower.photo}" alt="${flower.common}">
-            <h2>${flower.common}</h2>
-            <i>${flower.scientific}</i>
-            <p><strong>Family:</strong> ${flower.family}</p>
-            <p>${flower.tidbit}</p>
-            <small>Scanned: ${new Date(flower.timestamp).toLocaleDateString()}</small>
-            <button onclick="hideModal()" style="margin-top:20px;">Close</button>
-          </div>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      document.querySelector('.modal').style.display = 'flex';
-    }
-
-    function hideModal() {
-      const modal = document.querySelector('.modal');
-      if (modal) modal.remove();
-    }
-
-    function getLocation() {
-      if (!navigator.geolocation) return Promise.resolve(null);
-      return new Promise(resolve => {
-        navigator.geolocation.getCurrentPosition(
-          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          ()  => resolve(null),
-          { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
-        );
-      });
-    }
-
-    function distanceKm(a, b) {
-      const R = 6371;
-      const toRad = d => d * Math.PI / 180;
-      const dLat = toRad(b.lat - a.lat);
-      const dLng = toRad(b.lng - a.lng);
-      const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
-      const x = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
-      return 2 * R * Math.asin(Math.sqrt(x));
-    }
-
-    function uniquePlaces(flowers, radiusKm = 1) {
-      const located = flowers.filter(f => f.location);
-      const places = [];
-      for (const f of located) {
-        if (!places.some(p => distanceKm(p, f.location) <= radiusKm)) {
-          places.push(f.location);
+      // Identify (real AI if key set, mock otherwise)
+      let ai;
+      if (AI_CONFIG.apiKey()) {
+        showLoading('Identifying flower…');
+        try {
+          ai = await aiIdentifyFlower(resized);
+        } catch (err) {
+          hideLoading();
+          showToast(`⚠️ ${err.message}`, { error: true, duration: 5000 });
+          return;
         }
+        hideLoading();
+      } else {
+        ai = mockAI();
+        showToast('💡 No API key set — using mock result. Tap ⚙️ to add one.', { duration: 4500 });
       }
-      return places;
-    }
 
-    const ACHIEVEMENTS = [
-      { id: 'first',     section: 'collection', icon: '🌼', name: 'First Bloom',           desc: 'Scan your first flower',                check: f => f.length >= 1  },
-      { id: 'five',      section: 'collection', icon: '🌸', name: 'Daisy Chain',           desc: 'Scan 5 different flowers',              check: f => f.length >= 5  },
-      { id: 'ten',       section: 'collection', icon: '🏆', name: "Botanist's Apprentice", desc: 'Reach 10 flowers in your collection',   check: f => f.length >= 10 },
-      { id: 'twentyfive',section: 'collection', icon: '📚', name: 'Field Researcher',      desc: 'Reach 25 flowers in your collection',   check: f => f.length >= 25 },
-
-      { id: 'family3', section: 'botany', icon: '🌿', name: 'Family Tree',  desc: 'Scan flowers from 3 different families', check: f => new Set(f.map(x => x.family).filter(Boolean)).size >= 3 },
-      { id: 'family5', section: 'botany', icon: '🧬', name: 'Taxonomy Buff', desc: 'Scan flowers from 5 different families', check: f => new Set(f.map(x => x.family).filter(Boolean)).size >= 5 },
-      { id: 'aster5',  section: 'botany', icon: '☀️', name: 'Sun Catcher',  desc: 'Scan 5 flowers from the daisy family (Asteraceae)', check: f => f.filter(x => x.family === 'Asteraceae').length >= 5 },
-
-      { id: 'homeTurf',  section: 'region', icon: '🏡', name: 'Home Turf',          desc: 'Scan 5 flowers within 1km of one spot', check: f => {
-        const located = f.filter(x => x.location);
-        return located.some(anchor =>
-          located.filter(other => distanceKm(anchor.location, other.location) <= 1).length >= 5
-        );
-      }},
-      { id: 'roamer',    section: 'region', icon: '🗺️', name: 'Roaming Naturalist', desc: 'Scan flowers in 3 distinct locations',  check: f => uniquePlaces(f, 1).length >= 3 },
-      { id: 'wanderer',  section: 'region', icon: '🌍', name: 'Wanderer',           desc: 'Scan two flowers more than 50km apart', check: f => {
-        const located = f.filter(x => x.location);
-        for (let i = 0; i < located.length; i++) {
-          for (let j = i+1; j < located.length; j++) {
-            if (distanceKm(located[i].location, located[j].location) > 50) return true;
-          }
-        }
-        return false;
-      }},
-    ];
-
-    async function checkAchievements({ silent = false } = {}) {
-      const seen = await db.getItem('unlocked') || [];
-      const newlyUnlocked = [];
-
-      ACHIEVEMENTS.forEach(a => {
-        const isUnlocked = a.check(flowers);
-        const row = document.getElementById('ach-' + a.id);
-        if (row) {
-          row.classList.toggle('unlocked', isUnlocked);
-          const check = row.querySelector('.ach-check');
-          if (check) check.textContent = isUnlocked ? '✅' : '';
-        }
-        if (isUnlocked && !seen.includes(a.id)) {
-          newlyUnlocked.push(a);
-          seen.push(a.id);
-        }
-      });
-
-      await db.setItem('unlocked', seen);
-
-      if (!silent) {
-        newlyUnlocked.forEach((a, i) => setTimeout(() =>
-          showToast(`🏆 Achievement Unlocked: <strong>${a.name}</strong>`), i * 600));
-      }
-    }
-
-    function showToast(message) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.innerHTML = message;
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 500);
-      }, 3000);
-    }
-
-    function switchTab(n) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById('tab'+n).classList.add('active');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-btn')[n].classList.add('active');
-
-      if (n === 1) loadFlowers();
-      if (n !== 0 && currentStream) cancelScan();
+      await saveFlower(resized, ai);
+      showToast(`✨ Added <strong>${escapeHtml(ai.commonName)}</strong> to your collection`);
     }
 
     function beginScan() {
@@ -317,12 +508,164 @@
       }
     }
 
+    /* ───────────────────────────────────────────────
+       SETTINGS MODAL
+    ─────────────────────────────────────────────── */
+    function openSettings() {
+      document.getElementById('setting-apikey').value = AI_CONFIG.apiKey();
+      document.getElementById('setting-vision').value = AI_CONFIG.visionModel;
+      document.getElementById('setting-chat').value   = AI_CONFIG.chatModel;
+      document.getElementById('settings-modal').classList.add('show');
+    }
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.remove('show');
+    }
+    function saveSettings() {
+      const key    = document.getElementById('setting-apikey').value.trim();
+      const vision = document.getElementById('setting-vision').value;
+      const chat   = document.getElementById('setting-chat').value;
+      localStorage.setItem('flowerdex_apikey', key);
+      localStorage.setItem('flowerdex_vision_model', vision);
+      localStorage.setItem('flowerdex_chat_model',   chat);
+      AI_CONFIG.visionModel = vision;
+      AI_CONFIG.chatModel   = chat;
+      closeSettings();
+      showToast(key ? '✅ Settings saved' : '⚙️ Saved — no API key, using mock');
+      renderChat(); // refresh empty-state hint
+    }
+
+    /* ───────────────────────────────────────────────
+       CHAT
+    ─────────────────────────────────────────────── */
+    function buildSystemPrompt() {
+      const summary = flowers.length === 0
+        ? 'The user has not yet collected any flowers.'
+        : `The user has collected ${flowers.length} flower${flowers.length===1?'':'s'} so far:\n` +
+          flowers.slice(0, 50).map(f => `- ${f.common} (${f.scientific}, family ${f.family})`).join('\n');
+
+      return `You are a knowledgeable, friendly botanist assistant inside the FlowerDex app — a Pokédex-style personal flower collection tool. The user can ask anything: plant questions, foraging, edibility, recipes, general knowledge, etc. Be warm and concise. Reference their collection when relevant. Use plain text — no markdown headers or bullets unless truly helpful.
+
+${summary}`;
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (!AI_CONFIG.apiKey()) {
+        showToast('⚠️ Add an API key in ⚙️ to chat.', { error: true });
+        return;
+      }
+
+      input.value = '';
+      chatMessages.push({ role: 'user', content: text });
+      renderChat({ thinking: true });
+
+      try {
+        const response = await aiChat(chatMessages, buildSystemPrompt());
+        chatMessages.push({ role: 'assistant', content: response });
+      } catch (err) {
+        chatMessages.push({ role: 'assistant', content: `⚠️ ${err.message}` });
+      }
+      renderChat();
+    }
+
+    function renderChat({ thinking = false } = {}) {
+      const container = document.getElementById('chat-messages');
+      if (!container) return;
+
+      if (chatMessages.length === 0 && !thinking) {
+        container.innerHTML = `
+          <div class="chat-empty">
+            Ask the botanist anything — plant questions, recipes, foraging, your collection.
+            ${AI_CONFIG.apiKey() ? '' : '<br><br><strong style="color:var(--green);">Tap ⚙️ to add your API key first.</strong>'}
+          </div>`;
+        return;
+      }
+
+      let html = chatMessages.map(m =>
+        `<div class="chat-bubble ${m.role}">${escapeHtml(m.content)}</div>`
+      ).join('');
+
+      if (thinking) html += `<div class="chat-bubble assistant thinking">thinking…</div>`;
+
+      container.innerHTML = html;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    /* ───────────────────────────────────────────────
+       UTILITIES
+    ─────────────────────────────────────────────── */
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+    }
+
+    /* ───────────────────────────────────────────────
+       TAB NAV
+    ─────────────────────────────────────────────── */
+    function switchTab(n) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab'+n).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn')[n].classList.add('active');
+
+      if (n === 1) loadFlowers();
+      if (n === 3) renderChat();
+      if (n !== 0 && currentStream) cancelScan();
+    }
+
     window.onload = () => {
       loadFlowers();
+      renderChat();
     };
   </script>
 </head>
 <body>
+
+  <!-- Settings gear (always visible, top-right) -->
+  <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
+
+  <!-- Settings modal -->
+  <div id="settings-modal" class="settings-modal" onclick="if(event.target.id==='settings-modal')closeSettings()">
+    <div class="settings-content">
+      <h2>⚙️ Settings</h2>
+
+      <div class="input-row">
+        <label>Anthropic API key</label>
+        <input id="setting-apikey" type="password" placeholder="sk-ant-...">
+        <small>Get one at <strong>console.anthropic.com</strong> → Settings → API Keys. Stored only on this device.</small>
+      </div>
+
+      <div class="input-row">
+        <label>Vision model (flower ID)</label>
+        <select id="setting-vision">
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest (~$0.003 per scan)</option>
+          <option value="claude-sonnet-4-6">Sonnet 4.6 — balanced (~$0.008 per scan)</option>
+          <option value="claude-opus-4-7">Opus 4.7 — most accurate (~$0.013 per scan)</option>
+        </select>
+        <small>Haiku is plenty for common flowers. Bump higher only if accuracy feels off.</small>
+      </div>
+
+      <div class="input-row">
+        <label>Chat model</label>
+        <select id="setting-chat">
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest</option>
+          <option value="claude-sonnet-4-6">Sonnet 4.6 — balanced</option>
+          <option value="claude-opus-4-7">Opus 4.7 — most capable</option>
+        </select>
+      </div>
+
+      <button onclick="saveSettings()">Save</button>
+      <button onclick="closeSettings()" style="background:transparent; color:#aaa; border:1px solid #444;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading…</div>
+  </div>
 
   <!-- TAB 0: Scanner -->
   <div id="tab0" class="tab active">
@@ -364,11 +707,13 @@
 
   <!-- TAB 3: Chat -->
   <div id="tab3" class="tab">
-    <h2 style="padding:20px; color:var(--green);">Chat with Botanist AI</h2>
-    <div class="card">
-      <p>Full offline vision model coming next iteration</p>
-      <textarea style="width:90%; height:200px; background:#052e16; color:white; border:2px solid #4ade80; border-radius:12px; padding:15px;" placeholder="Ask anything about your scans..."></textarea>
-      <button onclick="alert('Real AI loads next — reply \"add WebLLM\" when ready')">Send to AI</button>
+    <div class="chat-container">
+      <div class="chat-header">Botanist AI</div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Ask about plants, recipes, your collection…" onkeydown="if(event.key==='Enter')sendChatMessage()">
+        <button class="chat-send" onclick="sendChatMessage()">Send</button>
+      </div>
     </div>
   </div>
 
