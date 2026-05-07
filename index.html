@@ -12,18 +12,30 @@
     .tabs { position:fixed; bottom:0; width:100%; display:flex; background:#0f3d2a; }
     .tab-btn { flex:1; padding:15px; text-align:center; color:white; }
     .tab-btn.active { background:#4ade80; color:#052e16; }
-    .card { background:#0f3d2a; margin:15px; border-radius:12px; padding:12px; cursor:pointer; }
-    .thumb { width:100%; height:140px; object-fit:cover; border-radius:12px; }
-    button { background:#4ade80; color:#052e16; border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; }
-    .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:#0a2218; }
+    
+    /* Scanner */
+    .scanner-center { height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .scan-circle { width:220px; height:220px; background:#4ade80; color:#052e16; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:bold; box-shadow:0 0 30px #4ade80; cursor:pointer; }
+    
+    /* Collection */
+    .collection-card { background:#0f3d2a; margin:12px 15px; border-radius:12px; padding:12px; display:flex; align-items:center; gap:15px; cursor:pointer; }
+    .small-thumb { width:70px; height:70px; object-fit:cover; border-radius:10px; flex-shrink:0; }
     
     /* Modal */
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
     .modal-content { background:#0f3d2a; max-width:90%; border-radius:16px; padding:20px; text-align:center; }
-    .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
-
+    .modal img { width:100%; max-height:320px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
+    
     /* Achievements */
-    .ach-item { display:flex; align-items:center; gap:12px; background:#0f3d2a; margin:12px; padding:15px; border-radius:12px; }
+    .ach-item { display:flex; align-items:center; gap:15px; background:#0f3d2a; margin:12px 15px; padding:15px; border-radius:12px; }
+    .ach-item.unlocked { color:#4ade80; }
+    .ach-item .icon { font-size:32px; width:40px; }
+    
+    /* Achievement popup */
+    #achievement-popup { position:fixed; top:30px; left:50%; transform:translateX(-50%); background:#4ade80; color:#052e16; padding:15px 25px; border-radius:9999px; box-shadow:0 10px 30px rgba(74,222,128,0.4); font-weight:bold; display:none; align-items:center; gap:10px; z-index:9999; white-space:nowrap; }
+    
+    button { background:#4ade80; color:#052e16; border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; }
+    .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:#0a2218; }
   </style>
   <script src="https://unpkg.com/localforage@1.10.0/dist/localforage.min.js"></script>
   <script>
@@ -49,7 +61,7 @@
       flowers.unshift(entry);
       await db.setItem('flowers', flowers);
       renderCollection();
-      unlockAchievements();
+      checkAndUnlockAchievements();
     }
 
     function mockAI() {
@@ -61,49 +73,59 @@
       };
     }
 
-    async function startCamera() {
-      const video = document.getElementById('preview');
+    // === SCANNER: Big circle button (exactly like your original style) ===
+    async function openCamera() {
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;flex-direction:column;';
+      modal.innerHTML = `
+        <div style="padding:15px;color:white;text-align:center;background:#052e16;">Point at flower then tap CAPTURE</div>
+        <video id="camera-preview" style="flex:1;width:100%;background:#000;" autoplay playsinline></video>
+        <div style="padding:20px;background:#052e16;text-align:center;">
+          <button onclick="captureFromModal()" style="width:80px;height:80px;border-radius:50%;background:#4ade80;color:#052e16;font-size:14px;">📸</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      const video = modal.querySelector('#camera-preview');
       try {
         currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = currentStream;
         await video.play();
       } catch(e) {
-        alert("Camera permission needed. Please allow it in Safari.");
+        alert("Camera permission needed");
+        modal.remove();
       }
     }
 
-    async function capturePhoto() {
-      const video = document.getElementById('preview');
-      if (!video.srcObject) return alert("Camera not started yet");
-
+    window.captureFromModal = async function() {
+      const video = document.querySelector('#camera-preview');
+      if (!video || !video.srcObject) return;
+      
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
       const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
-
-      // Stop camera
+      
       currentStream.getTracks().forEach(track => track.stop());
-      video.srcObject = null;
-
+      document.querySelector('#camera-preview').parentElement.parentElement.remove(); // close modal
+      
       const ai = mockAI();
       await saveFlower(photoBase64, ai);
-      alert(`✅ Saved: ${ai.commonName}\n\n(Photo stored ONLY on your phone)`);
-      
-      // Return to scanner tab with preview ready again
-      switchTab(0);
-      setTimeout(startCamera, 300);
-    }
+      alert(`✅ Saved: ${ai.commonName}\n\nPhoto stored ONLY on your phone`);
+    };
 
     function renderCollection() {
       const container = document.getElementById('collection');
       container.innerHTML = flowers.length === 0 
-        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
+        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the big green circle to scan your first specimen</p>`
         : flowers.map(f => `
-          <div class="card" onclick="showDetail(${f.id})">
-            <img src="${f.photo}" class="thumb">
-            <h3 style="margin:8px 0 4px;">${f.common}</h3>
-            <small>${new Date(f.timestamp).toLocaleDateString()}</small>
+          <div class="collection-card" onclick="showDetail(${f.id})">
+            <img src="${f.photo}" class="small-thumb">
+            <div>
+              <h3 style="margin:0 0 4px;">${f.common}</h3>
+              <small>${new Date(f.timestamp).toLocaleDateString()}</small>
+            </div>
           </div>
         `).join('');
     }
@@ -115,13 +137,13 @@
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
           <div class="modal-content" onclick="event.stopImmediatePropagation()">
-            <img src="${flower.photo}" alt="${flower.common}">
+            <img src="${flower.photo}">
             <h2>${flower.common}</h2>
             <i>${flower.scientific}</i>
             <p><strong>Family:</strong> ${flower.family}</p>
             <p>${flower.tidbit}</p>
             <small>Scanned: ${new Date(flower.timestamp).toLocaleDateString()}</small>
-            <button onclick="hideModal()" style="margin-top:20px;">Close</button>
+            <button onclick="hideModal()" style="margin-top:20px;width:100%;">Close</button>
           </div>
         </div>
       `;
@@ -134,14 +156,32 @@
       if (modal) modal.remove();
     }
 
-    function unlockAchievements() {
+    // === ACHIEVEMENTS with popup + green + checkmark ===
+    function checkAndUnlockAchievements() {
       const count = flowers.length;
-      if (count >= 1) {
-        document.getElementById('ach1').innerHTML = `<span style="font-size:28px;">🌼</span> First Bloom — Scan your first flower`;
+      let unlockedSomething = false;
+
+      if (count >= 1 && !document.getElementById('ach1').classList.contains('unlocked')) {
+        document.getElementById('ach1').classList.add('unlocked');
+        showAchievementPopup("🌼 First Bloom Unlocked!");
+        unlockedSomething = true;
       }
-      if (count >= 5) {
-        document.getElementById('ach2').innerHTML = `<span style="font-size:28px;">🌸</span> Daisy Chain — Scan 5 different flowers`;
+      if (count >= 5 && !document.getElementById('ach2').classList.contains('unlocked')) {
+        document.getElementById('ach2').classList.add('unlocked');
+        showAchievementPopup("🌸 Daisy Chain Unlocked!");
+        unlockedSomething = true;
       }
+    }
+
+    function showAchievementPopup(text) {
+      const popup = document.getElementById('achievement-popup');
+      popup.innerHTML = `🎉 ${text} <span style="font-size:24px;">✓</span>`;
+      popup.style.display = 'flex';
+      setTimeout(() => {
+        popup.style.transition = 'all 0.6s ease';
+        popup.style.opacity = '0';
+        setTimeout(() => { popup.style.display = 'none'; popup.style.opacity = '1'; }, 600);
+      }, 2200);
     }
 
     function switchTab(n) {
@@ -149,56 +189,48 @@
       document.getElementById('tab'+n).classList.add('active');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
-      
       if (n === 1) loadFlowers();
-      if (n === 0) setTimeout(startCamera, 100); // start preview when scanner tab opens
     }
 
     window.onload = () => {
       loadFlowers();
-      // Scanner preview will start when tab is selected
     };
   </script>
 </head>
 <body>
 
-  <!-- TAB 0: Scanner -->
+  <!-- TAB 0: Scanner (big circle like original) -->
   <div id="tab0" class="tab active">
-    <div style="padding:20px; text-align:center; height:100vh; display:flex; flex-direction:column;">
+    <div class="scanner-center">
       <h1 style="color:var(--green);">🌸 FlowerDex</h1>
-      <p>Point camera at any flower — AI identifies offline</p>
-      
-      <video id="preview" style="width:100%; max-height:420px; background:#000; border-radius:16px; margin:20px 0;" autoplay playsinline></video>
-      
-      <button onclick="capturePhoto()">📸 CAPTURE PHOTO</button>
-      
-      <div class="privacy">
-        🔒 Photos &amp; data stay 100% on your phone only.<br>
-        Nothing is ever sent to GitHub or any server.
+      <p style="margin-bottom:40px;">Tap the circle to scan a flower</p>
+      <div class="scan-circle" onclick="openCamera()">SCAN<br>FLOWER</div>
+      <div class="privacy" style="margin-top:60px;">
+        🔒 Everything stays 100% on your phone only
       </div>
     </div>
   </div>
 
-  <!-- TAB 1: Collection -->
+  <!-- TAB 1: Collection (small square left) -->
   <div id="tab1" class="tab">
     <h2 style="padding:20px; color:var(--green);">Your Collection</h2>
     <div id="collection"></div>
   </div>
 
-  <!-- TAB 2: Achievements -->
+  <!-- TAB 2: Achievements (with icons + green when unlocked) -->
   <div id="tab2" class="tab">
     <h2 style="padding:20px; color:var(--green);">Achievements</h2>
-    <div id="ach1" class="ach-item">🌼 First Bloom — Scan your first flower</div>
-    <div id="ach2" class="ach-item">🌸 Daisy Chain — Scan 5 different flowers</div>
-    <div class="ach-item"><span style="font-size:28px;">🏆</span> Regional Master — Collect 10 flowers in one region</div>
+    <div id="ach1" class="ach-item"><span class="icon">🌼</span> First Bloom — Scan your first flower</div>
+    <div id="ach2" class="ach-item"><span class="icon">🌸</span> Daisy Chain — Scan 5 flowers</div>
+    <div class="ach-item"><span class="icon">🏆</span> Regional Master — 10 flowers in one region</div>
   </div>
 
   <!-- TAB 3: Chat -->
   <div id="tab3" class="tab">
     <h2 style="padding:20px; color:var(--green);">Chat with Botanist AI</h2>
-    <div class="card">
+    <div style="padding:20px;">
       <p>Full offline vision model coming next iteration</p>
-      <textarea style="width:90%; height:200px; background:#052e16; color:white; border:2px solid #4ade80; border-radius:12px; padding:15px;" placeholder="Ask anything about your scans..."></textarea>
+      <textarea style="width:100%; height:220px; background:#052e16; color:white; border:2px solid #4ade80; border-radius:12px; padding:15px; margin-bottom:15px;" placeholder="Ask anything about your scans..."></textarea>
       <button onclick="alert('Real AI loads next — reply \"add WebLLM\" when ready')">Send to AI</button>
     </div>
   </div>
@@ -210,6 +242,9 @@
     <div class="tab-btn" onclick="switchTab(2)">Achievements</div>
     <div class="tab-btn" onclick="switchTab(3)">Chat</div>
   </div>
+
+  <!-- Achievement popup -->
+  <div id="achievement-popup"></div>
 
 </body>
 </html>
