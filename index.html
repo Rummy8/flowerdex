@@ -123,6 +123,35 @@
     @keyframes spin { to { transform:rotate(360deg); } }
     .loading-text { color:var(--green); font-weight:bold; font-size:18px; }
 
+    /* Scan animation overlay (Pokédex-style edge-detect reveal) */
+    .scan-overlay { display:none; position:fixed; inset:0; background:#000; z-index:1500; align-items:center; justify-content:center; flex-direction:column; }
+    .scan-overlay.show { display:flex; }
+    .scan-stage { position:relative; width:90vw; max-width:560px; aspect-ratio:1 / 1; border-radius:18px; overflow:hidden; box-shadow:0 0 40px rgba(74,222,128,0.4); }
+    .scan-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.35); }
+    .scan-edges { position:absolute; inset:0; width:100%; height:100%; opacity:0; transition: opacity 0.3s; }
+    .scan-edges.show { opacity:1; }
+    .scan-line { position:absolute; left:0; right:0; height:3px; background:linear-gradient(to bottom, transparent, var(--green) 50%, transparent); box-shadow:0 0 12px var(--green), 0 0 24px var(--green); top:0; opacity:0; }
+    .scan-line.sweep { animation: sweep 2s ease-in-out forwards; }
+    @keyframes sweep {
+      0%   { top:-2%;  opacity:0; }
+      8%   { opacity:1; }
+      92%  { opacity:1; }
+      100% { top:102%; opacity:0; }
+    }
+    /* Targeting reticle in corners (subtle Pokédex feel) */
+    .scan-corner { position:absolute; width:28px; height:28px; border:2px solid var(--green); opacity:0.85; }
+    .scan-corner.tl { top:14px; left:14px; border-right:none; border-bottom:none; }
+    .scan-corner.tr { top:14px; right:14px; border-left:none; border-bottom:none; }
+    .scan-corner.bl { bottom:14px; left:14px; border-right:none; border-top:none; }
+    .scan-corner.br { bottom:14px; right:14px; border-left:none; border-top:none; }
+    .scan-status { color:var(--green); font-weight:bold; font-size:18px; letter-spacing:2px; margin-top:24px; min-height:24px; }
+    .scan-status.pulse { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    /* SVG path drawing animation (lines trace in) */
+    .scan-edges path { fill:none; stroke:var(--green); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
+    .scan-edges.draw path { animation: dash 2s ease-out forwards; }
+    @keyframes dash { to { stroke-dashoffset:0; } }
+
     /* Chat */
     .chat-container { display:flex; flex-direction:column; height:100vh; padding-bottom:56px; box-sizing:border-box; }
     .chat-header { padding:14px 60px 12px 20px; color:var(--green); font-size:22px; font-weight:bold; flex-shrink:0; border-bottom:1px solid #1a3d2a; }
@@ -878,6 +907,160 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     }
 
     /* ───────────────────────────────────────────────
+       SCAN ANIMATION (Pokédex-style edge-detect reveal)
+       Steps:
+         1) Show photo darkened, scan line sweeps top→bottom
+         2) During sweep, edge-detect via Sobel on a tiny canvas
+         3) Convert edges to SVG paths and animate them drawing in
+         4) Pulse "ANALYZING…" until the API call returns
+    ─────────────────────────────────────────────── */
+    function showScanOverlay(photoBase64) {
+      const overlay = document.getElementById('scan-overlay');
+      const img = document.getElementById('scan-photo');
+      const edges = document.getElementById('scan-edges');
+      const line = document.getElementById('scan-line');
+      const status = document.getElementById('scan-status');
+
+      // Reset
+      edges.innerHTML = '';
+      edges.classList.remove('show', 'draw');
+      line.classList.remove('sweep');
+      status.textContent = 'SCANNING…';
+      status.classList.remove('pulse');
+
+      img.src = photoBase64;
+      overlay.classList.add('show');
+
+      // Kick off the scan line sweep on next frame
+      requestAnimationFrame(() => {
+        // Force reflow so the animation actually plays
+        void line.offsetWidth;
+        line.classList.add('sweep');
+      });
+
+      // Compute edges in parallel (don't block the sweep)
+      computeEdgePaths(photoBase64).then(pathsData => {
+        if (!overlay.classList.contains('show')) return; // user might have already navigated away
+        edges.innerHTML = pathsData.map(d =>
+          `<path d="${d}" stroke-dasharray="500" stroke-dashoffset="500"></path>`
+        ).join('');
+        edges.classList.add('show');
+        // Tiny delay so the sweep is visibly leading the draw
+        setTimeout(() => edges.classList.add('draw'), 250);
+      }).catch(() => { /* ignore — animation still works without edges */ });
+
+      // After sweep finishes, switch to ANALYZING pulse
+      setTimeout(() => {
+        if (!overlay.classList.contains('show')) return;
+        status.textContent = 'ANALYZING…';
+        status.classList.add('pulse');
+      }, 2000);
+    }
+
+    function hideScanOverlay() {
+      document.getElementById('scan-overlay').classList.remove('show');
+    }
+
+    /* Sobel edge detection → SVG path strings.
+       Runs on a small (160px wide) canvas for speed; result scales to fit
+       any size since the SVG uses preserveAspectRatio="none". */
+    async function computeEdgePaths(photoBase64) {
+      const img = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = rej;
+        i.src = photoBase64;
+      });
+
+      const W = 160;
+      const H = Math.round(img.height / img.width * W);
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, W, H);
+      const src = ctx.getImageData(0, 0, W, H).data;
+
+      // Convert to grayscale
+      const gray = new Float32Array(W * H);
+      for (let i = 0; i < W * H; i++) {
+        const j = i * 4;
+        gray[i] = src[j] * 0.299 + src[j+1] * 0.587 + src[j+2] * 0.114;
+      }
+
+      // Sobel kernels
+      const Gx = [-1,0,1,-2,0,2,-1,0,1];
+      const Gy = [-1,-2,-1,0,0,0,1,2,1];
+      const mag = new Float32Array(W * H);
+      let maxMag = 0;
+      for (let y = 1; y < H - 1; y++) {
+        for (let x = 1; x < W - 1; x++) {
+          let gx = 0, gy = 0, k = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const v = gray[(y + ky) * W + (x + kx)];
+              gx += v * Gx[k];
+              gy += v * Gy[k];
+              k++;
+            }
+          }
+          const m = Math.sqrt(gx * gx + gy * gy);
+          mag[y * W + x] = m;
+          if (m > maxMag) maxMag = m;
+        }
+      }
+
+      // Threshold edges (top ~12% strongest pixels become "edges")
+      const threshold = maxMag * 0.28;
+
+      // Walk the edge pixels and form short polyline paths.
+      // Visit each edge pixel only once; trace neighbors greedily.
+      const visited = new Uint8Array(W * H);
+      const paths = [];
+      const minRunLength = 5; // skip tiny specks
+
+      const dirs = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+      for (let y = 1; y < H - 1; y++) {
+        for (let x = 1; x < W - 1; x++) {
+          if (visited[y * W + x]) continue;
+          if (mag[y * W + x] < threshold) continue;
+          // Start a path
+          const run = [[x, y]];
+          visited[y * W + x] = 1;
+          let cx = x, cy = y;
+          for (let step = 0; step < 60; step++) {
+            let next = null, bestMag = 0;
+            for (const [dx, dy] of dirs) {
+              const nx = cx + dx, ny = cy + dy;
+              if (nx < 1 || ny < 1 || nx >= W - 1 || ny >= H - 1) continue;
+              const idx = ny * W + nx;
+              if (visited[idx]) continue;
+              if (mag[idx] >= threshold && mag[idx] > bestMag) {
+                bestMag = mag[idx]; next = [nx, ny];
+              }
+            }
+            if (!next) break;
+            visited[next[1] * W + next[0]] = 1;
+            run.push(next);
+            cx = next[0]; cy = next[1];
+          }
+          if (run.length >= minRunLength) {
+            // Convert to path string in SVG viewBox 100x100 coords
+            const sx = 100 / W, sy = 100 / H;
+            let d = `M ${(run[0][0] * sx).toFixed(2)} ${(run[0][1] * sy).toFixed(2)}`;
+            for (let i = 1; i < run.length; i++) {
+              d += ` L ${(run[i][0] * sx).toFixed(2)} ${(run[i][1] * sy).toFixed(2)}`;
+            }
+            paths.push(d);
+          }
+        }
+      }
+
+      // Cap total paths so the SVG doesn't get too heavy
+      return paths.slice(0, 60);
+    }
+
+
+    /* ───────────────────────────────────────────────
        SCANNER + CAMERA
     ─────────────────────────────────────────────── */
     async function startCamera() {
@@ -905,17 +1088,34 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       document.getElementById('scan-active').style.display = 'none';
       document.getElementById('scan-idle').style.display = 'flex';
       const resized = await resizeImage(fullPhoto, 1024).catch(() => fullPhoto);
+
       let ai;
       if (AI_CONFIG.apiKey()) {
-        showLoading('Identifying flower…');
-        try { ai = await aiIdentifyFlower(resized); }
-        catch (err) {
-          hideLoading();
+        // Show the scan-animation overlay (Pokédex-style edge reveal).
+        // Animation runs in parallel with the actual API call. We enforce a
+        // minimum display time so the animation always completes its sweep,
+        // even if the API somehow returns instantly.
+        showScanOverlay(resized);
+        const minAnimMs = 2400;
+        const t0 = Date.now();
+        try {
+          ai = await aiIdentifyFlower(resized);
+        } catch (err) {
+          // Wait for the sweep to at least finish before showing error
+          const elapsed = Date.now() - t0;
+          if (elapsed < minAnimMs) await new Promise(r => setTimeout(r, minAnimMs - elapsed));
+          hideScanOverlay();
           showToast(`⚠️ ${err.message}`, { error: true, duration: 5000 });
           return;
         }
-        hideLoading();
+        const elapsed = Date.now() - t0;
+        if (elapsed < minAnimMs) await new Promise(r => setTimeout(r, minAnimMs - elapsed));
+        hideScanOverlay();
       } else {
+        // No API key — fake the same animation feel using the mock result
+        showScanOverlay(resized);
+        await new Promise(r => setTimeout(r, 2400));
+        hideScanOverlay();
         ai = mockAI();
         showToast('💡 No API key set — using mock result. Tap ⚙️ to add one.', { duration: 4500 });
       }
@@ -1092,6 +1292,20 @@ ${summary}`;
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
     <div class="loading-text">Loading…</div>
+  </div>
+
+  <!-- Scan animation overlay (Pokédex edge-detect sequence) -->
+  <div id="scan-overlay" class="scan-overlay">
+    <div class="scan-stage">
+      <img id="scan-photo" class="scan-photo" alt="">
+      <svg id="scan-edges" class="scan-edges" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="scan-line" class="scan-line"></div>
+      <div class="scan-corner tl"></div>
+      <div class="scan-corner tr"></div>
+      <div class="scan-corner bl"></div>
+      <div class="scan-corner br"></div>
+    </div>
+    <div id="scan-status" class="scan-status">SCANNING…</div>
   </div>
 
   <!-- TAB 0: Scanner -->
