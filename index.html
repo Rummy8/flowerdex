@@ -122,12 +122,15 @@
       background: radial-gradient(ellipse at center, #0a3d1f 0%, #052e16 60%, #031a0d 100%);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       gap:28px;
-      animation: splash-fade-in 0.6s ease-out;
       transition: opacity 0.5s ease;
     }
-    @keyframes splash-fade-in { from { opacity:0; } to { opacity:1; } }
     .splash.fade-out { opacity:0; pointer-events:none; }
     .splash.gone { display:none !important; }
+
+    /* Hide the rest of the app while the splash is showing, so nothing
+       behind it can ever flash visible during initial paint. */
+    body > *:not(#splash) { transition: opacity 0.5s ease; }
+    body.splash-active > *:not(#splash) { visibility:hidden; opacity:0; }
     /* Subtle scanlines / grid for the dex/CRT feel */
     .splash::before {
       content:''; position:absolute; inset:0; pointer-events:none;
@@ -1331,6 +1334,8 @@ ${summary}`;
       if (!splash) return;
       if (splash.classList.contains('gone')) return;
       splash.classList.add('fade-out');
+      // Reveal the rest of the app under the splash as it fades
+      document.body.classList.remove('splash-active');
       // Force-hide as a safety net even if the CSS transition doesn't run
       setTimeout(() => {
         splash.classList.add('gone');
@@ -1342,18 +1347,11 @@ ${summary}`;
 
     // Schedule splash dismissal as early as possible — don't wait for window.onload,
     // which can be flaky on iOS Safari when service workers or slow CDN scripts are loading.
-    // Run when the DOM is ready so we can find the splash element.
     function initSplash() {
       const splash = document.getElementById('splash');
       if (!splash) return;
-      if (sessionStorage.getItem('flowerdex_splash_shown')) {
-        // Already seen this session — hide immediately without animation
-        splash.classList.add('gone');
-        splash.style.display = 'none';
-      } else {
-        sessionStorage.setItem('flowerdex_splash_shown', '1');
-        setTimeout(dismissSplash, 5100);
-      }
+      // Splash plays every time the app opens — no session gate
+      setTimeout(dismissSplash, 5100);
     }
 
     if (document.readyState === 'loading') {
@@ -1370,6 +1368,7 @@ ${summary}`;
         splash.classList.add('gone');
         splash.style.display = 'none';
       }
+      document.body.classList.remove('splash-active');
     }, 8000);
 
     window.onload = () => {
@@ -1378,7 +1377,7 @@ ${summary}`;
     };
   </script>
 </head>
-<body>
+<body class="splash-active">
 
   <!-- Splash screen — plays once per session -->
   <div id="splash" class="splash">
