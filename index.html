@@ -11,7 +11,21 @@
     .tab.active { display:block; }
     .tabs { position:fixed; bottom:0; width:100%; display:flex; background:var(--panel); z-index:800; }
     .tab-btn { flex:1; padding:15px; text-align:center; color:white; cursor:pointer; font-size:14px; }
-    .tab-btn.active { background:var(--green); color:var(--dark); }
+    .tab-btn.active { background:var(--green); color:var(--dark); box-shadow: inset 0 2px 0 #86efac, 0 0 18px rgba(74,222,128,0.5); }
+
+    /* Subtle CRT scanlines across the whole app — gives that dex/cyberpunk feel */
+    body::after {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+      background: repeating-linear-gradient(0deg, rgba(74,222,128,0.025) 0px, rgba(74,222,128,0.025) 1px, transparent 1px, transparent 3px);
+    }
+
+    /* Pokédex-style number badges on collection cards */
+    .dex-num { display:inline-block; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size:11px; color:#86efac; letter-spacing:1px; background:var(--panel-deep); padding:2px 6px; border-radius:4px; margin-bottom:4px; }
+    /* Rarity-colored card edges */
+    .card.rarity-common    { box-shadow: inset 3px 0 0 #6b7280; }
+    .card.rarity-uncommon  { box-shadow: inset 3px 0 0 #fbbf24; }
+    .card.rarity-rare      { box-shadow: inset 3px 0 0 #c084fc; }
+    .card.rarity-rare      { background: linear-gradient(90deg, rgba(192,132,252,0.08), var(--panel) 30%); }
     button { background:var(--green); color:var(--dark); border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; cursor:pointer; }
     .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:var(--panel-deep); }
 
@@ -75,7 +89,7 @@
     .back-btn { background:transparent; color:var(--green); border:1px solid var(--green); width:auto; padding:8px 16px; margin:14px 14px 0; border-radius:9999px; font-size:14px; cursor:pointer; }
 
     /* Species list (inside log detail modal) */
-    .species-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #1a3d2a; text-align:left; cursor:pointer; transition: background 0.15s; }
+    .species-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #1a3d2a; text-align:left; cursor:pointer; transition: background 0.15s; gap:12px; }
     .species-row:hover, .species-row:active { background:#0a2218; }
     .species-row.found { color:var(--green); }
     .species-row.unfound { color:#aaa; }
@@ -83,16 +97,24 @@
     .species-row .com { font-weight:bold; }
     .species-row .sci { display:block; font-style:italic; font-size:13px; color:#888; }
     .species-row .marker { font-size:18px; min-width:20px; text-align:center; }
+    .species-row .row-text { flex:1; min-width:0; }
+    .row-sprite { width:40px; height:40px; flex-shrink:0; background:var(--panel-deep); border-radius:8px; padding:3px; box-sizing:border-box; }
+    .row-sprite svg { width:100%; height:100%; display:block; }
+    .row-sprite.silhouette svg { filter: brightness(0.25) contrast(0.6); }
 
     /* Species detail modal — placeholder image area for unfound */
-    .species-placeholder { width:100%; height:200px; background:linear-gradient(135deg, #0a2218 0%, #0f3d2a 100%); border:2px dashed #1f5d3a; border-radius:12px; margin-bottom:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .species-placeholder { width:100%; height:200px; background:linear-gradient(135deg, #0a2218 0%, #0f3d2a 100%); border:2px dashed #1f5d3a; border-radius:12px; margin-bottom:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+    .species-placeholder::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(0deg, rgba(74,222,128,0.04) 0px, rgba(74,222,128,0.04) 1px, transparent 1px, transparent 3px); pointer-events:none; }
+    .big-sprite { width:120px; height:120px; }
+    .big-sprite svg { width:100%; height:100%; display:block; }
+    .big-sprite.silhouette svg { filter: brightness(0.18) contrast(0.5); }
     .info-grid { display:grid; grid-template-columns:1fr; gap:8px; background:var(--panel-deep); padding:14px; border-radius:10px; font-size:14px; }
     .info-grid div { color:#ddd; }
     .info-grid strong { color:var(--green); margin-right:6px; }
 
     /* Region map */
     .region-map-wrap { background:var(--panel-deep); padding:14px; border-radius:10px; display:flex; gap:14px; align-items:flex-start; }
-    .region-map { flex-shrink:0; width:140px; height:auto; }
+    .region-map { flex-shrink:0; width:120px; height:auto; max-height:280px; }
     .region-list { list-style:none; padding:0; margin:0; flex:1; font-size:13px; }
     .region-list li { padding:4px 0; color:var(--green); border-bottom:1px solid #1a3d2a; }
     .region-list li:last-child { border-bottom:none; }
@@ -173,7 +195,7 @@
     @keyframes title-fade-in { to { opacity:1; } }
     .splash-title span {
       display:inline-block;
-      animation: letter-wave 1.4s ease-in-out infinite;
+      animation: letter-wave 1.4s ease-in-out 1 forwards;
     }
     /* Each letter offset so the wave runs left-to-right on a 1.4s loop.
        9 letters / 1.4s = ~0.155s gap between adjacent letters. */
@@ -422,6 +444,259 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     }
 
     /* ───────────────────────────────────────────────
+       PROCEDURAL FLOWER SPRITES
+       Generate a unique SVG sprite for each species based on its
+       family (silhouette), biome (palette), rarity (adornment),
+       and id (deterministic seed for variation).
+
+       Returns an SVG string. Use as inline content or as a
+       data URI: 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
+    ─────────────────────────────────────────────── */
+
+    // Color palettes by biome — each is [primary, secondary, accent]
+    const BIOME_PALETTES = {
+      'Grasslands':       ['#fbbf24', '#f59e0b', '#fde68a'],  // gold/amber
+      'Desert':           ['#fb923c', '#ea580c', '#fed7aa'],  // orange
+      'Coastal':          ['#f472b6', '#ec4899', '#fbcfe8'],  // pink
+      'Wetlands':         ['#60a5fa', '#3b82f6', '#bfdbfe'],  // blue
+      'Riparian':         ['#06b6d4', '#0891b2', '#a5f3fc'],  // teal
+      'Alpine':           ['#e0e7ff', '#a5b4fc', '#ffffff'],  // pale blue/white
+      'Temperate Forest': ['#a78bfa', '#7c3aed', '#ddd6fe'],  // purple
+      'Mediterranean':    ['#facc15', '#ca8a04', '#fef08a'],  // yellow-olive
+      'Urban':            ['#94a3b8', '#64748b', '#cbd5e1'],  // gray
+    };
+
+    // Family → silhouette template name
+    const FAMILY_TEMPLATES = {
+      'Asteraceae':      'composite',  // many ray petals (daisy)
+      'Fabaceae':        'pea',         // banner+wings (pea flower)
+      'Rosaceae':        'fivePetal',   // 5 round broad petals
+      'Liliaceae':       'sixTepal',    // 6 long pointed
+      'Melanthiaceae':   'sixTepal',
+      'Amaryllidaceae':  'sixTepal',
+      'Iridaceae':       'sixTepal',
+      'Apiaceae':        'umbel',       // tiny dots in cluster
+      'Brassicaceae':    'fourPetal',   // 4-petaled cross
+      'Ranunculaceae':   'fivePetal',
+      'Polemoniaceae':   'starPhlox',   // 5 fused trumpet
+      'Ericaceae':       'bell',        // bell-shaped
+      'Onagraceae':      'fourPetal',
+      'Papaveraceae':    'poppy',       // 4 large overlapping
+      'Caryophyllaceae': 'fivePetal',
+      'Solanaceae':      'starPhlox',
+      'Hydrophyllaceae': 'starPhlox',
+      'Saxifragaceae':   'fivePetal',
+      'Violaceae':       'violet',      // irregular 5-petal
+      'Orchidaceae':     'orchid',      // distinctive lip
+      'Caprifoliaceae':  'bell',
+      'Pinaceae':        'cone',        // cone-shape
+      'Cupressaceae':    'cone',
+      'Fagaceae':        'leafCluster',
+      'Lauraceae':       'leafCluster',
+      // fallback handled in generator
+    };
+
+    // Tiny seeded RNG (mulberry32) — deterministic per flower id
+    function spriteRng(seed) {
+      let a = seed | 0;
+      return () => {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function spriteSeedFromId(id) {
+      // Hash the ID string to a stable integer
+      let h = 0;
+      for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+      return h;
+    }
+
+    /**
+     * Generate an SVG sprite for a flower from the master list.
+     * @param {object} m - master flower entry (slim format)
+     * @returns {string} SVG markup, viewBox 0 0 100 100
+     */
+    function generateFlowerSprite(m) {
+      const seed = spriteSeedFromId(m.id);
+      const rand = spriteRng(seed);
+      const palette = BIOME_PALETTES[m.bio] || ['#86efac', '#4ade80', '#bbf7d0'];
+      const [primary, secondary, accent] = palette;
+      const template = FAMILY_TEMPLATES[m.fam] || 'fivePetal';
+      const isRare      = m.rar === 'Rare';
+      const isUncommon  = m.rar === 'Uncommon';
+
+      // Slight per-species variation via the seeded rng
+      const rotOffset = Math.floor(rand() * 30) - 15; // -15° to +15°
+      const sizeVar   = 0.92 + rand() * 0.16;          // 0.92 to 1.08
+
+      // Build the petal/silhouette body based on template
+      let body = '';
+      switch (template) {
+        case 'composite': { // daisy/sunflower — many narrow rays
+          const rays = 12 + Math.floor(rand() * 6);
+          for (let i = 0; i < rays; i++) {
+            const a = (360 / rays) * i + rotOffset;
+            body += `<ellipse cx="50" cy="22" rx="4.5" ry="13" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(${a} 50 50)"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="9" fill="${secondary}"/>`;
+          body += `<circle cx="50" cy="50" r="6" fill="${accent}" opacity="0.7"/>`;
+          break;
+        }
+        case 'pea': { // pea flower — banner + 2 wings
+          body += `<path d="M 50 22 Q 30 22 28 42 Q 30 50 50 50 Q 70 50 72 42 Q 70 22 50 22 Z" fill="${primary}" stroke="${secondary}" stroke-width="1"/>`;
+          body += `<ellipse cx="38" cy="58" rx="14" ry="10" fill="${secondary}" stroke="${secondary}" stroke-width="0.6" transform="rotate(-20 38 58)"/>`;
+          body += `<ellipse cx="62" cy="58" rx="14" ry="10" fill="${secondary}" stroke="${secondary}" stroke-width="0.6" transform="rotate(20 62 58)"/>`;
+          body += `<ellipse cx="50" cy="72" rx="10" ry="6" fill="${accent}" opacity="0.85"/>`;
+          break;
+        }
+        case 'fivePetal': { // 5 round petals
+          for (let i = 0; i < 5; i++) {
+            const a = (360 / 5) * i - 90 + rotOffset;
+            body += `<ellipse cx="50" cy="28" rx="13" ry="17" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(${a} 50 50)"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="8" fill="${secondary}"/>`;
+          body += `<circle cx="50" cy="50" r="4.5" fill="${accent}"/>`;
+          break;
+        }
+        case 'fourPetal': { // 4 petals (cross) — Brassicaceae, Onagraceae
+          for (let i = 0; i < 4; i++) {
+            const a = (360 / 4) * i - 90 + rotOffset;
+            body += `<ellipse cx="50" cy="26" rx="11" ry="18" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(${a} 50 50)"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="6" fill="${secondary}"/>`;
+          break;
+        }
+        case 'sixTepal': { // 6 narrow tepals — lilies, irises
+          for (let i = 0; i < 6; i++) {
+            const a = 60 * i + rotOffset;
+            body += `<ellipse cx="50" cy="22" rx="7" ry="22" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(${a} 50 50)"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="6" fill="${accent}"/>`;
+          body += `<circle cx="50" cy="50" r="3" fill="${secondary}"/>`;
+          break;
+        }
+        case 'umbel': { // Apiaceae — tiny dots clustered
+          // Outer ring
+          for (let i = 0; i < 12; i++) {
+            const a = (Math.PI * 2 / 12) * i;
+            const x = 50 + Math.cos(a) * 28, y = 50 + Math.sin(a) * 28;
+            body += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${primary}" stroke="${secondary}" stroke-width="0.5"/>`;
+          }
+          // Middle ring
+          for (let i = 0; i < 8; i++) {
+            const a = (Math.PI * 2 / 8) * i + 0.3;
+            const x = 50 + Math.cos(a) * 14, y = 50 + Math.sin(a) * 14;
+            body += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${secondary}"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="3" fill="${accent}"/>`;
+          break;
+        }
+        case 'starPhlox': { // 5 fused trumpet petals
+          for (let i = 0; i < 5; i++) {
+            const a = (360 / 5) * i - 90 + rotOffset;
+            body += `<path d="M 50 50 L 35 12 Q 50 6 65 12 Z" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(${a} 50 50)"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="5" fill="${secondary}"/>`;
+          break;
+        }
+        case 'bell': { // bell-shape — Ericaceae, Caprifoliaceae
+          body += `<path d="M 30 30 Q 30 70 50 78 Q 70 70 70 30 Q 50 22 30 30 Z" fill="${primary}" stroke="${secondary}" stroke-width="1"/>`;
+          body += `<ellipse cx="50" cy="76" rx="14" ry="5" fill="${secondary}" opacity="0.7"/>`;
+          body += `<line x1="48" y1="78" x2="48" y2="86" stroke="${secondary}" stroke-width="1"/>`;
+          body += `<line x1="52" y1="78" x2="52" y2="86" stroke="${secondary}" stroke-width="1"/>`;
+          break;
+        }
+        case 'poppy': { // 4 broad overlapping petals — Papaveraceae
+          body += `<ellipse cx="50" cy="35" rx="22" ry="18" fill="${primary}" stroke="${secondary}" stroke-width="1"/>`;
+          body += `<ellipse cx="50" cy="65" rx="22" ry="18" fill="${primary}" stroke="${secondary}" stroke-width="1"/>`;
+          body += `<ellipse cx="35" cy="50" rx="18" ry="22" fill="${secondary}" opacity="0.85" stroke="${secondary}" stroke-width="0.8"/>`;
+          body += `<ellipse cx="65" cy="50" rx="18" ry="22" fill="${secondary}" opacity="0.85" stroke="${secondary}" stroke-width="0.8"/>`;
+          body += `<circle cx="50" cy="50" r="8" fill="${accent}"/>`;
+          body += `<circle cx="50" cy="50" r="4" fill="${secondary}"/>`;
+          break;
+        }
+        case 'violet': { // 5 irregular petals (2 up, 2 side, 1 down)
+          body += `<ellipse cx="40" cy="34" rx="11" ry="14" fill="${primary}" stroke="${secondary}" stroke-width="0.7" transform="rotate(-20 40 34)"/>`;
+          body += `<ellipse cx="60" cy="34" rx="11" ry="14" fill="${primary}" stroke="${secondary}" stroke-width="0.7" transform="rotate(20 60 34)"/>`;
+          body += `<ellipse cx="30" cy="55" rx="13" ry="11" fill="${secondary}" stroke="${secondary}" stroke-width="0.7"/>`;
+          body += `<ellipse cx="70" cy="55" rx="13" ry="11" fill="${secondary}" stroke="${secondary}" stroke-width="0.7"/>`;
+          body += `<ellipse cx="50" cy="72" rx="14" ry="10" fill="${accent}" stroke="${secondary}" stroke-width="0.7"/>`;
+          body += `<circle cx="50" cy="50" r="4" fill="${secondary}"/>`;
+          break;
+        }
+        case 'orchid': { // distinct lip — central plus drooping pouch
+          body += `<ellipse cx="50" cy="32" rx="9" ry="14" fill="${primary}" stroke="${secondary}" stroke-width="0.8"/>`;
+          body += `<ellipse cx="32" cy="42" rx="14" ry="9" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(-30 32 42)"/>`;
+          body += `<ellipse cx="68" cy="42" rx="14" ry="9" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(30 68 42)"/>`;
+          body += `<path d="M 35 60 Q 50 88 65 60 Q 60 50 50 50 Q 40 50 35 60 Z" fill="${secondary}" stroke="${secondary}" stroke-width="0.8"/>`;
+          body += `<circle cx="50" cy="58" r="4" fill="${accent}"/>`;
+          break;
+        }
+        case 'cone': { // conifer cone shape
+          body += `<path d="M 50 14 L 70 78 L 30 78 Z" fill="${primary}" stroke="${secondary}" stroke-width="1"/>`;
+          for (let row = 0; row < 5; row++) {
+            const y = 24 + row * 12;
+            const w = 6 + row * 5;
+            body += `<ellipse cx="50" cy="${y}" rx="${w}" ry="4" fill="${secondary}" opacity="0.85"/>`;
+          }
+          break;
+        }
+        case 'leafCluster': { // generic small clustered flowers / catkins
+          for (let i = 0; i < 6; i++) {
+            const a = (Math.PI * 2 / 6) * i + rotOffset;
+            const x = 50 + Math.cos(a) * 18, y = 50 + Math.sin(a) * 18;
+            body += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6" ry="9" fill="${primary}" stroke="${secondary}" stroke-width="0.6" transform="rotate(${(a*180/Math.PI+90).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="5" fill="${secondary}"/>`;
+          break;
+        }
+        default: { // generic fivePetal fallback
+          for (let i = 0; i < 5; i++) {
+            const a = (360 / 5) * i - 90 + rotOffset;
+            body += `<ellipse cx="50" cy="28" rx="13" ry="17" fill="${primary}" stroke="${secondary}" stroke-width="0.8" transform="rotate(${a} 50 50)"/>`;
+          }
+          body += `<circle cx="50" cy="50" r="6" fill="${secondary}"/>`;
+        }
+      }
+
+      // Rarity adornments
+      let adornments = '';
+      if (isRare) {
+        // Sparkles around the flower
+        for (let i = 0; i < 4; i++) {
+          const a = (Math.PI * 2 / 4) * i + 0.4;
+          const x = 50 + Math.cos(a) * 42, y = 50 + Math.sin(a) * 42;
+          adornments += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path d="M 0 -4 L 1 -1 L 4 0 L 1 1 L 0 4 L -1 1 L -4 0 L -1 -1 Z" fill="#fef9c3"/></g>`;
+        }
+      }
+
+      // Glow filter for uncommon/rare
+      const glow = (isRare || isUncommon)
+        ? `<filter id="glow-${m.id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${isRare ? 2.2 : 1.2}"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>`
+        : '';
+      const glowAttr = (isRare || isUncommon) ? ` filter="url(#glow-${m.id})"` : '';
+
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        ${glow ? `<defs>${glow}</defs>` : ''}
+        <g transform="translate(50 50) scale(${sizeVar.toFixed(3)}) translate(-50 -50)"${glowAttr}>
+          ${body}
+        </g>
+      </svg>`;
+    }
+
+    /** Generate sprite from master flower id */
+    function spriteForId(masterId) {
+      const m = MASTER_FLOWERS.find(x => x.id === masterId);
+      if (!m) return '';
+      return generateFlowerSprite(m);
+    }
+
+
+    /* ───────────────────────────────────────────────
        IMAGE HELPER — resize before API
     ─────────────────────────────────────────────── */
     function resizeImage(base64, maxDim = 1024) {
@@ -489,18 +764,25 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
 
     function renderCollection() {
       const container = document.getElementById('collection');
-      container.innerHTML = flowers.length === 0
-        ? `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`
-        : flowers.map(f => `
-          <div class="card" onclick="showDetail(${f.id})">
+      if (flowers.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`;
+        return;
+      }
+      container.innerHTML = flowers.map(f => {
+        const master = f.masterId ? MASTER_FLOWERS.find(m => m.id === f.masterId) : null;
+        const rarityClass = master ? 'rarity-' + master.rar.toLowerCase() : '';
+        const dexNum = master ? `<span class="dex-num">${master.id} / 300</span><br>` : '';
+        return `
+          <div class="card ${rarityClass}" onclick="showDetail(${f.id})">
             <div class="card-text">
+              ${dexNum}
               <h3>${escapeHtml(f.common)}</h3>
               <span class="sci">${escapeHtml(f.scientific)}</span>
               <span class="date">${new Date(f.timestamp).toLocaleDateString()}${f.biome ? ' · ' + escapeHtml(f.biome) : ''}</span>
             </div>
             <img src="${f.photo}" class="thumb">
-          </div>
-        `).join('');
+          </div>`;
+      }).join('');
     }
 
     function showDetail(id) {
@@ -670,15 +952,19 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const found    = species.filter(s => foundIds.has(s.id));
       const unfound  = species.filter(s => !foundIds.has(s.id));
 
-      // Tappable rows; both states show real names now
-      const rowHtml = (s, isFound) => `
+      // Tappable rows; both states show real names + procedural sprite
+      const rowHtml = (s, isFound) => {
+        const sprite = generateFlowerSprite(s);
+        return `
         <div class="species-row ${isFound ? 'found' : 'unfound'}" onclick="event.stopPropagation(); showSpeciesDetail('${s.id}')">
-          <div>
+          <div class="row-sprite ${isFound ? '' : 'silhouette'}">${sprite}</div>
+          <div class="row-text">
             <span class="com">${escapeHtml(s.com)}</span>
             <span class="sci">${escapeHtml(s.sci)}</span>
           </div>
           <span class="marker">${isFound ? '✓' : '🔒'}</span>
         </div>`;
+      };
 
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
@@ -708,12 +994,12 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const userScans = flowers.filter(f => f.masterId === masterId);
       const isFound = userScans.length > 0;
 
-      // Use the user's photo if they've scanned it, otherwise show placeholder
+      // Use the user's photo if they've scanned it, otherwise show procedural sprite
       const photoBlock = isFound
         ? `<img src="${userScans[0].photo}" alt="${escapeHtml(m.com)}" style="width:100%; max-height:260px; object-fit:cover; border-radius:12px; margin-bottom:12px;">`
         : `<div class="species-placeholder">
-             <div style="font-size:64px; opacity:0.25;">🌸</div>
-             <div style="color:#666; font-size:13px; margin-top:8px;">Not yet scanned — find this in the wild!</div>
+             <div class="big-sprite silhouette">${generateFlowerSprite(m)}</div>
+             <div style="color:#666; font-size:12px; margin-top:8px; letter-spacing:1.5px;">— LOCKED — FIND IN THE WILD —</div>
            </div>`;
 
       // Status banner
@@ -780,29 +1066,58 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
        Schematic outline; highlights regions where the
        given biome occurs. Built from CALIFORNIA_BIOME_MAP.
     ─────────────────────────────────────────────── */
+    /* ───────────────────────────────────────────────
+       CALIFORNIA MAP — real outline + biome highlights
+       Outline traced from real state boundary (~46 points).
+       viewBox is ~200x360 to match California's tall N–S shape.
+    ─────────────────────────────────────────────── */
+    const CA_MAP = {
+      W: 200, H: 360,
+      minLat: 32.4, maxLat: 42.1,
+      minLng: -124.5, maxLng: -114.4,
+      // Real California outline path (simplified to ~46 points)
+      path: 'M 5.7,3.7 L 19.8,3.7 L 39.6,3.7 L 59.4,3.7 L 79.2,3.7 L 89.1,3.7 L 89.1,40.8 L 89.1,77.9 L 89.1,115.1 L 99.0,133.6 L 108.9,152.2 L 118.8,170.7 L 128.7,189.3 L 138.6,207.8 L 148.5,226.4 L 158.4,244.9 L 168.3,263.5 L 178.2,270.9 L 188.1,282.1 L 195.4,289.5 L 198.0,300.6 L 200.0,319.2 L 198.0,337.7 L 195.0,347.8 L 178.2,350.7 L 158.4,354.4 L 146.5,355.2 L 142.6,348.9 L 138.6,330.3 L 128.7,311.8 L 118.8,300.6 L 103.0,285.8 L 79.2,282.1 L 76.2,259.8 L 63.4,237.5 L 50.5,206.0 L 41.6,181.9 L 39.6,159.6 L 30.7,141.0 L 27.7,126.2 L 15.8,103.9 L 12.9,77.9 L 2.0,63.1 L 5.9,33.4 L 5.7,11.1 L 5.7,3.7 Z',
+      // Major cities for orientation
+      cities: [
+        { name: 'San Francisco', lat: 37.77, lng: -122.42 },
+        { name: 'Los Angeles',   lat: 34.05, lng: -118.24 },
+        { name: 'San Diego',     lat: 32.72, lng: -117.16 },
+        { name: 'Sacramento',    lat: 38.58, lng: -121.49 },
+        { name: 'Fresno',        lat: 36.74, lng: -119.78 },
+      ],
+    };
+
+    function projectCA(lat, lng) {
+      return {
+        x: (lng - CA_MAP.minLng) / (CA_MAP.maxLng - CA_MAP.minLng) * CA_MAP.W,
+        y: (CA_MAP.maxLat - lat) / (CA_MAP.maxLat - CA_MAP.minLat) * CA_MAP.H,
+      };
+    }
+
     function renderCaliforniaMap(targetBiome) {
-      // Map state: lat 32.5–42.0, lng -124.5– -114.0
-      // SVG viewBox 0 0 200 320 — width fits modal nicely
-      const W = 200, H = 320;
-      const minLat = 32.5, maxLat = 42.0;
-      const minLng = -124.5, maxLng = -114.0;
-      const project = (lat, lng) => ({
-        x: (lng - minLng) / (maxLng - minLng) * W,
-        y: (maxLat - lat) / (maxLat - minLat) * H, // invert: north is up
-      });
+      const { W, H, path, cities } = CA_MAP;
 
-      // Highlight rectangles for each region matching the target biome
-      const highlights = CALIFORNIA_BIOME_MAP
-        .filter(r => r.biome === targetBiome)
-        .map(r => {
-          const tl = project(r.maxLat, r.minLng);
-          const br = project(r.minLat, r.maxLng);
-          const w = br.x - tl.x, h = br.y - tl.y;
-          return `<rect x="${tl.x.toFixed(1)}" y="${tl.y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="var(--green)" opacity="0.55" rx="2"/>`;
-        }).join('');
-
-      // Region labels (just the names of matching regions)
+      // Highlight rectangles for each region matching the target biome.
+      // Clip to the California outline so they don't bleed past the border.
       const matching = CALIFORNIA_BIOME_MAP.filter(r => r.biome === targetBiome);
+      const highlights = matching.map(r => {
+        const tl = projectCA(r.maxLat, r.minLng);
+        const br = projectCA(r.minLat, r.maxLng);
+        const w = br.x - tl.x, h = br.y - tl.y;
+        return `<rect x="${tl.x.toFixed(1)}" y="${tl.y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="var(--green)" opacity="0.55" rx="2"/>`;
+      }).join('');
+
+      // City pins (small dots + labels) — always shown for orientation
+      const cityPins = cities.map(c => {
+        const p = projectCA(c.lat, c.lng);
+        // Offset label so it doesn't overlap the dot
+        const labelX = p.x + 4, labelY = p.y + 3;
+        return `
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="#cfe"/>
+          <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" fill="#cfe" font-size="6.5" font-family="system-ui">${escapeHtml(c.name)}</text>`;
+      }).join('');
+
+      // Region labels in side list (deduped)
       const labelList = matching.length
         ? matching.map(r => r.region).filter((v,i,a) => a.indexOf(v) === i).map(n => `<li>${escapeHtml(n)}</li>`).join('')
         : '<li style="color:#aaa;">No mapped regions in California</li>';
@@ -810,11 +1125,17 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       return `
         <div class="region-map-wrap">
           <svg viewBox="0 0 ${W} ${H}" class="region-map" xmlns="http://www.w3.org/2000/svg" aria-label="Map of California biome regions">
-            <!-- California outline (simplified) -->
-            <path d="M 39,4 L 130,4 L 145,18 L 165,30 L 178,55 L 188,90 L 196,135 L 192,180 L 178,225 L 155,275 L 130,310 L 110,316 L 90,310 L 75,295 L 60,275 L 45,250 L 35,215 L 24,175 L 16,130 L 12,90 L 18,55 L 28,25 Z"
-                  fill="#0a2218" stroke="#1f5d3a" stroke-width="1.5"/>
-            <!-- Highlight rectangles for matching biome -->
-            ${highlights}
+            <defs>
+              <clipPath id="ca-clip"><path d="${path}"/></clipPath>
+            </defs>
+            <!-- California outline fill -->
+            <path d="${path}" fill="#0a2218" stroke="#1f5d3a" stroke-width="1.5"/>
+            <!-- Biome highlights, clipped to outline -->
+            <g clip-path="url(#ca-clip)">${highlights}</g>
+            <!-- Re-stroke the outline on top so the border stays crisp -->
+            <path d="${path}" fill="none" stroke="var(--green)" stroke-width="1.2" opacity="0.7"/>
+            <!-- City pins -->
+            ${cityPins}
             <!-- North arrow -->
             <text x="${W-18}" y="14" fill="#666" font-size="9" text-anchor="middle">N</text>
             <text x="${W-18}" y="22" fill="#666" font-size="11" text-anchor="middle">↑</text>
@@ -1160,6 +1481,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       if (!video.srcObject || !video.videoWidth) {
         return alert("Camera isn't ready yet — give it a moment after tapping Start Scan");
       }
+      // Haptic feedback on supported devices (Android Chrome). iOS Safari ignores it.
+      if (navigator.vibrate) navigator.vibrate(40);
       video.pause();
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
@@ -1351,7 +1674,8 @@ ${summary}`;
       const splash = document.getElementById('splash');
       if (!splash) return;
       // Splash plays every time the app opens — no session gate
-      setTimeout(dismissSplash, 5100);
+      // Wordmark fades in 2.45s, wave runs 1.4s + last letter delay 0.8s = ends ~4.65s
+      setTimeout(dismissSplash, 4400);
     }
 
     if (document.readyState === 'loading') {
