@@ -4,14 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FlowerDex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root { --green: #4ade80; --dark: #052e16; --panel: #0f3d2a; --panel-deep: #0a2218; --muted: #86efac; }
+    :root { --green: #4ade80; --dark: #052e16; --panel: #0f3d2a; --panel-deep: #0a2218; --muted: #86efac; --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace; }
     body { margin:0; font-family: system-ui; background:var(--dark); color:white; }
+
+    /* HUD panels — boxed layout with cornered borders */
+    .hud-panel { background:var(--panel-deep); border:1px solid #1f5d3a; border-radius:0; padding:0; margin:12px; position:relative; }
+    .hud-panel::before, .hud-panel::after,
+    .hud-panel > .corner-tl, .hud-panel > .corner-br {
+      content:''; position:absolute; width:8px; height:8px; border:2px solid var(--green); pointer-events:none;
+    }
+    .hud-panel::before { top:-1px; left:-1px; border-right:none; border-bottom:none; }
+    .hud-panel::after  { bottom:-1px; right:-1px; border-left:none; border-top:none; }
+    .hud-panel-header { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#0a2218; border-bottom:1px solid #1f5d3a; font-family:var(--mono); font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
+    .hud-panel-header .right { color:#86efac; opacity:0.6; font-weight:700; }
+    .hud-panel-body { padding:12px 14px; }
+
+    /* HUD field rows — label : value pattern */
+    .hud-row { display:flex; gap:10px; padding:4px 0; font-family:var(--mono); font-size:12px; line-height:1.4; }
+    .hud-row .lbl { color:var(--muted); opacity:0.7; min-width:90px; flex-shrink:0; }
+    .hud-row .val { color:white; flex:1; word-break:break-word; }
+    .hud-row .val.dim { color:#cfe; opacity:0.7; }
+
+    /* Top status strip — like Amaranthine's "STANDBY/CONN ESTABLISHED" */
+    .status-bar { position:fixed; top:0; left:0; right:0; height:22px; background:rgba(5,46,22,0.9); border-bottom:1px solid #1f5d3a; display:flex; gap:14px; align-items:center; padding:0 64px 0 12px; font-family:var(--mono); font-size:9px; letter-spacing:1.5px; color:var(--muted); z-index:850; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .status-bar .dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation: status-blink 2s infinite; }
+    @keyframes status-blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .status-bar .id { margin-left:auto; opacity:0.6; }
+    body { padding-top:22px; }
+
+    /* Background grid of tiny + marks */
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0.08;
+      background-image:
+        linear-gradient(to right, var(--green) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--green) 1px, transparent 1px);
+      background-size: 30px 30px;
+      mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+    }
     .tab { display:none; padding-bottom:70px; }
     .tab.active { display:block; }
     .tabs { position:fixed; bottom:0; width:100%; display:flex; background:var(--panel); z-index:800; }
-    .tab-btn { flex:1; padding:15px; text-align:center; color:white; cursor:pointer; font-size:14px; }
-    .tab-btn.active { background:var(--green); color:var(--dark); box-shadow: inset 0 2px 0 #86efac, 0 0 18px rgba(74,222,128,0.5); }
+    .tab-btn { flex:1; padding:14px 4px 12px; text-align:center; color:#86efac; cursor:pointer; font-size:11px; font-family:var(--mono); letter-spacing:2px; text-transform:uppercase; border-top:2px solid transparent; }
+    .tab-btn.active { background:transparent; color:var(--green); border-top-color: var(--green); box-shadow: inset 0 24px 32px -20px rgba(74,222,128,0.35); }
 
     /* Subtle CRT scanlines across the whole app — gives that dex/cyberpunk feel */
     body::after {
@@ -19,17 +58,29 @@
       background: repeating-linear-gradient(0deg, rgba(74,222,128,0.025) 0px, rgba(74,222,128,0.025) 1px, transparent 1px, transparent 3px);
     }
 
-    /* Pokédex-style number badges on collection cards */
-    .dex-num { display:inline-block; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size:11px; color:#86efac; letter-spacing:1px; background:var(--panel-deep); padding:2px 6px; border-radius:4px; margin-bottom:4px; }
-    /* Rarity-colored card edges */
-    .card.rarity-common    { box-shadow: inset 3px 0 0 #6b7280; }
-    .card.rarity-uncommon  { box-shadow: inset 3px 0 0 #fbbf24; }
-    .card.rarity-rare      { box-shadow: inset 3px 0 0 #c084fc; }
-    .card.rarity-rare      { background: linear-gradient(90deg, rgba(192,132,252,0.08), var(--panel) 30%); }
+    /* HUD card — Amaranthine-style entry */
+    .dex-num { font-family: var(--mono); font-size:11px; color:var(--green); letter-spacing:1px; }
+    .rarity-tag { font-family: var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); }
+    .hud-card { background:var(--panel-deep); border:1px solid #1f5d3a; border-radius:0; margin:12px; padding:0; cursor:pointer; position:relative; overflow:hidden; }
+    .hud-card::before, .hud-card::after { content:''; position:absolute; width:7px; height:7px; border:1.5px solid var(--green); pointer-events:none; }
+    .hud-card::before { top:-1px; left:-1px; border-right:none; border-bottom:none; }
+    .hud-card::after  { bottom:-1px; right:-1px; border-left:none; border-top:none; }
+    .hud-card .card-meta { display:flex; justify-content:space-between; align-items:center; padding:5px 10px; background:#0a2218; border-bottom:1px solid #1f5d3a; }
+    .hud-card .card-body { display:flex; align-items:flex-start; gap:14px; padding:12px; }
+    .hud-card .card-fields { display:grid; grid-template-columns: auto 1fr; gap:2px 10px; margin-top:8px; font-family:var(--mono); font-size:10px; line-height:1.5; }
+    .hud-card .card-fields .lbl { color:var(--muted); opacity:0.6; letter-spacing:1px; }
+    .hud-card .card-fields .val { color:white; }
+    .hud-card.rarity-uncommon { border-color: #ca8a04; }
+    .hud-card.rarity-uncommon .rarity-tag { color:#fbbf24; }
+    .hud-card.rarity-uncommon::before, .hud-card.rarity-uncommon::after { border-color:#fbbf24; }
+    .hud-card.rarity-rare { border-color: #7c3aed; }
+    .hud-card.rarity-rare .rarity-tag { color:#c084fc; }
+    .hud-card.rarity-rare::before, .hud-card.rarity-rare::after { border-color:#c084fc; }
+
     button { background:var(--green); color:var(--dark); border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; cursor:pointer; }
     .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:var(--panel-deep); }
 
-    /* Collection cards */
+    /* Collection cards (legacy class kept for any leftover spots) */
     .card { background:var(--panel); margin:15px; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:14px; }
     .card-text { flex:1; min-width:0; text-align:left; }
     .card-text h3 { margin:0 0 4px; font-size:18px; }
@@ -41,6 +92,26 @@
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; }
     .modal-content { background:var(--panel); max-width:90%; width:100%; max-width:480px; border-radius:16px; padding:20px; text-align:center; max-height:90vh; overflow-y:auto; box-sizing:border-box; }
     .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
+
+    /* HUD modal — Amaranthine-style specimen record */
+    .modal-content.hud-modal { background:var(--panel-deep); border:1px solid var(--green); border-radius:0; padding:0; text-align:left; position:relative; }
+    .modal-content.hud-modal::before, .modal-content.hud-modal::after { content:''; position:absolute; width:12px; height:12px; border:2px solid var(--green); pointer-events:none; }
+    .modal-content.hud-modal::before { top:-1px; left:-1px; border-right:none; border-bottom:none; }
+    .modal-content.hud-modal::after  { bottom:-1px; right:-1px; border-left:none; border-top:none; }
+    .hud-modal-top { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#0a2218; border-bottom:1px solid #1f5d3a; font-family:var(--mono); font-size:10px; letter-spacing:1.5px; }
+    .hud-modal-id { color:var(--muted); }
+    .hud-modal-img { width:100%; max-height:280px; object-fit:cover; border-radius:0; margin:0; display:block; }
+    .hud-modal-content { padding:14px 16px; }
+    .hud-modal-content h2 { font-family: system-ui; }
+    .hud-modal-content i { font-family: system-ui; }
+    .hud-modal-fields { background:#0a2218; border-left:2px solid var(--green); padding:10px 12px; margin:14px 0; }
+    .hud-section-header { font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--muted); padding:6px 0; border-top:1px solid #1f5d3a; margin-top:14px; }
+    .rarity-line { font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--muted); margin:8px 0 4px; }
+    .rarity-line.uncommon { color:#fbbf24; }
+    .rarity-line.rare { color:#c084fc; }
+    .hud-close-btn { width:auto; margin:0; padding:8px 18px; background:transparent; color:var(--green); border:1px solid var(--green); border-radius:0; font-family:var(--mono); font-size:11px; letter-spacing:2px; display:block; margin:14px auto 16px; }
+    .hud-close-btn:active { background:var(--green); color:var(--dark); }
+
     .badge { display:inline-block; padding:3px 10px; border-radius:9999px; font-size:12px; margin:2px; font-weight:bold; }
     .badge.biome { background:#1a4d2e; color:var(--green); }
     .badge.family { background:#1a3d4d; color:#7dd3fc; }
@@ -195,22 +266,23 @@
     @keyframes title-fade-in { to { opacity:1; } }
     .splash-title span {
       display:inline-block;
-      animation: letter-wave 1.4s ease-in-out 1 forwards;
+      animation: letter-wave 0.6s ease-in-out 1 forwards;
     }
-    /* Each letter offset so the wave runs left-to-right on a 1.4s loop.
-       9 letters / 1.4s = ~0.155s gap between adjacent letters. */
-    .splash-title span:nth-child(1) { animation-delay: 0.00s; }
-    .splash-title span:nth-child(2) { animation-delay: 0.10s; }
-    .splash-title span:nth-child(3) { animation-delay: 0.20s; }
-    .splash-title span:nth-child(4) { animation-delay: 0.30s; }
-    .splash-title span:nth-child(5) { animation-delay: 0.40s; }
-    .splash-title span:nth-child(6) { animation-delay: 0.50s; }
-    .splash-title span:nth-child(7) { animation-delay: 0.60s; }
-    .splash-title span:nth-child(8) { animation-delay: 0.70s; }
-    .splash-title span:nth-child(9) { animation-delay: 0.80s; }
+    /* Each letter starts its bounce ~0.12s after the previous one,
+       beginning right after the title finishes fading in (2.85s).
+       Total wave duration: 0.12 * 8 + 0.6 = ~1.56s. */
+    .splash-title span:nth-child(1) { animation-delay: 2.85s; }
+    .splash-title span:nth-child(2) { animation-delay: 2.97s; }
+    .splash-title span:nth-child(3) { animation-delay: 3.09s; }
+    .splash-title span:nth-child(4) { animation-delay: 3.21s; }
+    .splash-title span:nth-child(5) { animation-delay: 3.33s; }
+    .splash-title span:nth-child(6) { animation-delay: 3.45s; }
+    .splash-title span:nth-child(7) { animation-delay: 3.57s; }
+    .splash-title span:nth-child(8) { animation-delay: 3.69s; }
+    .splash-title span:nth-child(9) { animation-delay: 3.81s; }
     @keyframes letter-wave {
-      0%, 60%, 100% { transform: translateY(0); }
-      25%           { transform: translateY(-10px); }
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
     }
     .splash-tagline {
       color:#86efac; font-size:11px; letter-spacing:4px; opacity:0;
@@ -765,52 +837,99 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     function renderCollection() {
       const container = document.getElementById('collection');
       if (flowers.length === 0) {
-        container.innerHTML = `<p style="text-align:center; padding:60px 20px; color:#aaa;">No flowers logged yet<br><br>Tap the green button to scan your first specimen</p>`;
+        container.innerHTML = `
+          <div class="hud-panel">
+            <div class="hud-panel-header"><span>// COLLECTION ARCHIVE</span><span class="right">EMPTY</span></div>
+            <div class="hud-panel-body" style="text-align:center; padding:50px 20px;">
+              <div style="font-family:var(--mono); font-size:13px; color:var(--muted); letter-spacing:1px;">NO SPECIMENS LOGGED</div>
+              <div style="font-size:12px; color:#888; margin-top:10px;">Use the SCAN module to begin cataloging.</div>
+            </div>
+          </div>`;
         return;
       }
-      container.innerHTML = flowers.map(f => {
+      const matched = flowers.filter(f => f.masterId).length;
+      const matchPct = Math.round((matched / 300) * 100);
+      const headerHtml = `
+        <div class="hud-panel">
+          <div class="hud-panel-header"><span>// COLLECTION ARCHIVE</span><span class="right">${flowers.length} ENTRIES · ${matched}/300 CATALOGED · ${matchPct}%</span></div>
+        </div>`;
+      const cardsHtml = flowers.map(f => {
         const master = f.masterId ? MASTER_FLOWERS.find(m => m.id === f.masterId) : null;
         const rarityClass = master ? 'rarity-' + master.rar.toLowerCase() : '';
-        const dexNum = master ? `<span class="dex-num">${master.id} / 300</span><br>` : '';
+        const dexNum = master ? master.id : '???/???';
+        const rarityLbl = master ? master.rar.toUpperCase() : 'UNKNOWN';
+        const date = new Date(f.timestamp);
+        const ts = date.toISOString().slice(0,10).replace(/-/g,'.');
         return `
-          <div class="card ${rarityClass}" onclick="showDetail(${f.id})">
-            <div class="card-text">
-              ${dexNum}
-              <h3>${escapeHtml(f.common)}</h3>
-              <span class="sci">${escapeHtml(f.scientific)}</span>
-              <span class="date">${new Date(f.timestamp).toLocaleDateString()}${f.biome ? ' · ' + escapeHtml(f.biome) : ''}</span>
+          <div class="card hud-card ${rarityClass}" onclick="showDetail(${f.id})">
+            <div class="card-meta">
+              <span class="dex-num">${escapeHtml(dexNum)}</span>
+              <span class="rarity-tag">${rarityLbl}</span>
             </div>
-            <img src="${f.photo}" class="thumb">
+            <div class="card-body">
+              <div class="card-text">
+                <h3>${escapeHtml(f.common)}</h3>
+                <span class="sci">${escapeHtml(f.scientific)}</span>
+                <div class="card-fields">
+                  <span class="lbl">SCAN_DATE</span><span class="val">${ts}</span>
+                  ${f.biome ? `<span class="lbl">BIOME</span><span class="val">${escapeHtml(f.biome.toUpperCase())}</span>` : ''}
+                  ${f.family ? `<span class="lbl">FAMILY</span><span class="val">${escapeHtml(f.family)}</span>` : ''}
+                </div>
+              </div>
+              <img src="${f.photo}" class="thumb">
+            </div>
           </div>`;
       }).join('');
+      container.innerHTML = headerHtml + cardsHtml;
     }
 
     function showDetail(id) {
       const flower = flowers.find(f => f.id === id);
       if (!flower) return;
       const master = flower.masterId ? MASTER_FLOWERS.find(m => m.id === flower.masterId) : null;
+      const ts = new Date(flower.timestamp);
+      const tsStr = ts.toISOString().slice(0,16).replace('T', ' ').replace(/-/g, '.');
 
-      const badges = [];
-      if (flower.biome) badges.push(`<span class="badge biome">${escapeHtml(flower.biome)}</span>`);
-      if (flower.family) badges.push(`<span class="badge family">${escapeHtml(flower.family)}</span>`);
-      if (master) {
-        badges.push(`<span class="badge rarity-${master.rar.toLowerCase()}">${master.rar}</span>`);
-        if (master.edi) badges.push('<span class="badge edible">Edible</span>');
-        if (master.tox) badges.push('<span class="badge toxic">Toxic</span>');
-        if (master.nat) badges.push('<span class="badge native">Native</span>');
-      }
+      const dexNum = master ? master.id : '???/???';
+      const rarityStr = master ? master.rar.toUpperCase() : 'UNKNOWN';
+      const rarityClass = master ? master.rar.toLowerCase() : 'common';
+      const edibleStr = master ? (master.edi ? 'YES' : 'NO') : '—';
+      const toxicStr = master ? (master.tox ? 'YES — DO NOT INGEST' : 'NO') : '—';
+      const nativeStr = master ? (master.nat ? 'CALIFORNIA NATIVE' : 'INTRODUCED') : '—';
+
+      const gpsStr = flower.location
+        ? `${flower.location.lat.toFixed(4)}°, ${flower.location.lng.toFixed(4)}°`
+        : 'GPS UNAVAILABLE';
 
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
-          <div class="modal-content" onclick="event.stopImmediatePropagation()">
-            <img src="${flower.photo}" alt="${escapeHtml(flower.common)}">
-            <h2 style="margin:0 0 4px;">${escapeHtml(flower.common)}</h2>
-            <i style="color:#cfe;">${escapeHtml(flower.scientific)}</i>
-            <div style="margin:12px 0;">${badges.join(' ')}</div>
-            <p>${escapeHtml(flower.tidbit)}</p>
-            ${flower.region ? `<p style="color:#aaa; font-size:13px;">📍 ${escapeHtml(flower.region)}</p>` : ''}
-            <small style="color:#aaa;">Scanned: ${new Date(flower.timestamp).toLocaleDateString()}</small>
-            <button onclick="hideModal()" style="margin-top:20px;">Close</button>
+          <div class="modal-content hud-modal" onclick="event.stopImmediatePropagation()">
+            <div class="hud-modal-top">
+              <span class="hud-modal-id">// SPECIMEN RECORD</span>
+              <span class="hud-modal-id" style="color:var(--green);">${escapeHtml(dexNum)} / 300</span>
+            </div>
+            <img src="${flower.photo}" alt="${escapeHtml(flower.common)}" class="hud-modal-img">
+            <div class="hud-modal-content">
+              <h2 style="margin:0 0 2px;">${escapeHtml(flower.common)}</h2>
+              <i style="color:var(--muted); font-size:13px;">${escapeHtml(flower.scientific)}</i>
+              <div class="rarity-line rarity-${rarityClass}">RARITY: ${rarityStr}</div>
+
+              <div class="hud-modal-fields">
+                <div class="hud-row"><span class="lbl">FAMILY</span><span class="val">${escapeHtml(flower.family || '—')}</span></div>
+                <div class="hud-row"><span class="lbl">BIOME</span><span class="val">${escapeHtml((flower.biome || 'UNKNOWN').toUpperCase())}</span></div>
+                <div class="hud-row"><span class="lbl">REGION</span><span class="val dim">${escapeHtml(flower.region || '—')}</span></div>
+                <div class="hud-row"><span class="lbl">EDIBLE</span><span class="val">${edibleStr}</span></div>
+                <div class="hud-row"><span class="lbl">TOXIC</span><span class="val">${toxicStr}</span></div>
+                <div class="hud-row"><span class="lbl">ORIGIN</span><span class="val">${nativeStr}</span></div>
+                <div class="hud-row"><span class="lbl">SCAN_TS</span><span class="val">${tsStr}</span></div>
+                <div class="hud-row"><span class="lbl">GPS</span><span class="val">${gpsStr}</span></div>
+              </div>
+
+              <div class="hud-section-header">// FIELD NOTES</div>
+              <p style="font-family:var(--mono); font-size:12px; line-height:1.6; color:#ddd; margin:8px 0;">${escapeHtml(flower.tidbit)}</p>
+            </div>
+
+            <button onclick="hideModal()" class="hud-close-btn">CLOSE [×]</button>
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -1500,6 +1619,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
         // minimum display time so the animation always completes its sweep,
         // even if the API somehow returns instantly.
         showScanOverlay(resized);
+        setStatus('ANALYZING SPECIMEN...');
         const minAnimMs = 2400;
         const t0 = Date.now();
         try {
@@ -1509,6 +1629,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           const elapsed = Date.now() - t0;
           if (elapsed < minAnimMs) await new Promise(r => setTimeout(r, minAnimMs - elapsed));
           hideScanOverlay();
+          setStatus('IDENTIFICATION FAILED', 4000);
           showToast(`⚠️ ${err.message}`, { error: true, duration: 5000 });
           return;
         }
@@ -1518,12 +1639,14 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       } else {
         // No API key — fake the same animation feel using the mock result
         showScanOverlay(resized);
+        setStatus('SIMULATING IDENTIFICATION...');
         await new Promise(r => setTimeout(r, 2400));
         hideScanOverlay();
         ai = mockAI();
         showToast('💡 No API key set — using mock result. Tap ⚙️ to add one.', { duration: 4500 });
       }
       await saveFlower(resized, ai);
+      setStatus(`SPECIMEN LOGGED: ${ai.commonName.toUpperCase()}`, 4000);
       showToast(`✨ Added <strong>${escapeHtml(ai.commonName)}</strong> to your collection`);
     }
 
@@ -1674,8 +1797,9 @@ ${summary}`;
       const splash = document.getElementById('splash');
       if (!splash) return;
       // Splash plays every time the app opens — no session gate
-      // Wordmark fades in 2.45s, wave runs 1.4s + last letter delay 0.8s = ends ~4.65s
-      setTimeout(dismissSplash, 4400);
+      // Wave finishes at ~4.41s (last letter starts 3.81s + 0.6s duration).
+      // Hold for ~0.6s after, then fade out.
+      setTimeout(dismissSplash, 5000);
     }
 
     if (document.readyState === 'loading') {
@@ -1695,9 +1819,32 @@ ${summary}`;
       document.body.classList.remove('splash-active');
     }, 8000);
 
+    /* ───────────────────────────────────────────────
+       STATUS BAR — top HUD strip
+    ─────────────────────────────────────────────── */
+    function setStatus(msg, durationMs = 0) {
+      const el = document.getElementById('status-msg');
+      if (!el) return;
+      el.textContent = msg;
+      if (durationMs > 0) {
+        clearTimeout(el._resetTimer);
+        el._resetTimer = setTimeout(() => { el.textContent = 'SYSTEM ONLINE'; }, durationMs);
+      }
+    }
+
+    function initStatusBar() {
+      // Random session ID — looks like a real auth session token
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let id = '';
+      for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      const sidEl = document.getElementById('session-id');
+      if (sidEl) sidEl.textContent = id;
+    }
+
     window.onload = () => {
       loadFlowers();
       renderChat();
+      initStatusBar();
     };
   </script>
 </head>
@@ -1762,6 +1909,16 @@ ${summary}`;
       <span>F</span><span>L</span><span>O</span><span>W</span><span>E</span><span>R</span><span>D</span><span>E</span><span>X</span>
     </div>
     <div class="splash-tagline">CALIFORNIA · v1.0</div>
+  </div>
+
+  <!-- Top status strip (HUD-style) -->
+  <div class="status-bar" id="status-bar">
+    <span class="dot"></span>
+    <span>FLOWERDEX</span>
+    <span style="opacity:0.5;">v1.0</span>
+    <span style="opacity:0.4;">|</span>
+    <span id="status-msg">SYSTEM ONLINE</span>
+    <span class="id" id="status-id">SES_<span id="session-id"></span></span>
   </div>
 
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
@@ -1864,11 +2021,11 @@ ${summary}`;
   </div>
 
   <div class="tabs">
-    <div class="tab-btn active" onclick="switchTab(0)">Scan</div>
-    <div class="tab-btn" onclick="switchTab(1)">Collection</div>
-    <div class="tab-btn" onclick="switchTab(2)">Logs</div>
-    <div class="tab-btn" onclick="switchTab(3)">Achievements</div>
-    <div class="tab-btn" onclick="switchTab(4)">Chat</div>
+    <div class="tab-btn active" onclick="switchTab(0)">[01] SCAN</div>
+    <div class="tab-btn" onclick="switchTab(1)">[02] DEX</div>
+    <div class="tab-btn" onclick="switchTab(2)">[03] LOGS</div>
+    <div class="tab-btn" onclick="switchTab(3)">[04] ACH</div>
+    <div class="tab-btn" onclick="switchTab(4)">[05] AI</div>
   </div>
 
 </body>
