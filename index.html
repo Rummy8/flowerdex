@@ -116,6 +116,84 @@
     .input-row small { display:block; color:#aaa; font-size:12px; margin-top:6px; line-height:1.4; }
     .settings-content button { width:100%; }
 
+    /* Splash screen — startup animation (~2.2s total, then fades) */
+    .splash {
+      position:fixed; inset:0; z-index:3000;
+      background: radial-gradient(ellipse at center, #0a3d1f 0%, #052e16 60%, #031a0d 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:28px;
+      animation: splash-fade-in 0.6s ease-out;
+      transition: opacity 0.5s ease;
+    }
+    @keyframes splash-fade-in { from { opacity:0; } to { opacity:1; } }
+    .splash.fade-out { opacity:0; pointer-events:none; }
+    .splash.gone { display:none !important; }
+    /* Subtle scanlines / grid for the dex/CRT feel */
+    .splash::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:
+        repeating-linear-gradient(0deg, rgba(74,222,128,0.04) 0px, rgba(74,222,128,0.04) 1px, transparent 1px, transparent 3px),
+        radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.45) 100%);
+    }
+    .splash-svg { width:200px; height:220px; overflow:visible; position:relative; z-index:1; }
+    /* Origin + junction dots */
+    .splash .dot { fill: var(--green); filter: drop-shadow(0 0 8px var(--green)); }
+    /* Stem + branches */
+    .splash .stem, .splash .branch {
+      stroke: var(--green); stroke-width: 2.5; stroke-linecap: round;
+      filter: drop-shadow(0 0 4px var(--green));
+    }
+    /* Flowers — start invisible, scale-bloom animation via CSS */
+    .splash .flower {
+      opacity:0;
+      animation: bloom 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .splash .flower-left  { animation-delay: 1.95s; }
+    .splash .flower-right { animation-delay: 2.10s; }
+    @keyframes bloom {
+      0%   { opacity:0; transform: scale(0)    rotate(-25deg); }
+      60%  { opacity:1; transform: scale(1.15) rotate(5deg); }
+      100% { opacity:1; transform: scale(1)    rotate(0deg); }
+    }
+    /* Both flowers same green theme */
+    .splash .petal { fill: var(--green); stroke:#86efac; stroke-width:0.6; filter: drop-shadow(0 0 4px rgba(74,222,128,0.7)); }
+    .splash .flower-center { fill:#bbf7d0; }
+
+    /* Wordmark — letters do a continuous wave bounce */
+    .splash-title {
+      color: var(--green); font-size:28px; font-weight:bold; letter-spacing:6px;
+      text-shadow:0 0 12px rgba(74,222,128,0.7);
+      position:relative; z-index:1;
+      opacity:0;
+      animation: title-fade-in 0.4s ease-out 2.45s forwards;
+    }
+    @keyframes title-fade-in { to { opacity:1; } }
+    .splash-title span {
+      display:inline-block;
+      animation: letter-wave 1.4s ease-in-out infinite;
+    }
+    /* Each letter offset so the wave runs left-to-right on a 1.4s loop.
+       9 letters / 1.4s = ~0.155s gap between adjacent letters. */
+    .splash-title span:nth-child(1) { animation-delay: 0.00s; }
+    .splash-title span:nth-child(2) { animation-delay: 0.10s; }
+    .splash-title span:nth-child(3) { animation-delay: 0.20s; }
+    .splash-title span:nth-child(4) { animation-delay: 0.30s; }
+    .splash-title span:nth-child(5) { animation-delay: 0.40s; }
+    .splash-title span:nth-child(6) { animation-delay: 0.50s; }
+    .splash-title span:nth-child(7) { animation-delay: 0.60s; }
+    .splash-title span:nth-child(8) { animation-delay: 0.70s; }
+    .splash-title span:nth-child(9) { animation-delay: 0.80s; }
+    @keyframes letter-wave {
+      0%, 60%, 100% { transform: translateY(0); }
+      25%           { transform: translateY(-10px); }
+    }
+    .splash-tagline {
+      color:#86efac; font-size:11px; letter-spacing:4px; opacity:0;
+      animation: tagline-in 0.5s ease-out 2.85s forwards;
+      position:relative; z-index:1;
+    }
+    @keyframes tagline-in { to { opacity:1; } }
+
     /* Loading overlay */
     .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1500; align-items:center; justify-content:center; flex-direction:column; gap:20px; }
     .loading-overlay.show { display:flex; }
@@ -1248,6 +1326,52 @@ ${summary}`;
       if (n !== 0 && currentStream) cancelScan();
     }
 
+    function dismissSplash() {
+      const splash = document.getElementById('splash');
+      if (!splash) return;
+      if (splash.classList.contains('gone')) return;
+      splash.classList.add('fade-out');
+      // Force-hide as a safety net even if the CSS transition doesn't run
+      setTimeout(() => {
+        splash.classList.add('gone');
+        splash.style.display = 'none';
+        splash.style.visibility = 'hidden';
+        splash.style.pointerEvents = 'none';
+      }, 500);
+    }
+
+    // Schedule splash dismissal as early as possible — don't wait for window.onload,
+    // which can be flaky on iOS Safari when service workers or slow CDN scripts are loading.
+    // Run when the DOM is ready so we can find the splash element.
+    function initSplash() {
+      const splash = document.getElementById('splash');
+      if (!splash) return;
+      if (sessionStorage.getItem('flowerdex_splash_shown')) {
+        // Already seen this session — hide immediately without animation
+        splash.classList.add('gone');
+        splash.style.display = 'none';
+      } else {
+        sessionStorage.setItem('flowerdex_splash_shown', '1');
+        setTimeout(dismissSplash, 5100);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSplash);
+    } else {
+      // DOM already parsed; run immediately
+      initSplash();
+    }
+
+    // Hard safety net — no matter what, kill the splash after 8 seconds
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      if (splash && !splash.classList.contains('gone')) {
+        splash.classList.add('gone');
+        splash.style.display = 'none';
+      }
+    }, 8000);
+
     window.onload = () => {
       loadFlowers();
       renderChat();
@@ -1255,6 +1379,67 @@ ${summary}`;
   </script>
 </head>
 <body>
+
+  <!-- Splash screen — plays once per session -->
+  <div id="splash" class="splash">
+    <svg class="splash-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- Origin dot (bottom center) -->
+      <circle class="dot" cx="100" cy="200" r="0">
+        <animate attributeName="r" from="0" to="5" begin="0.3s" dur="0.25s" fill="freeze"/>
+      </circle>
+
+      <!-- Stem: line from origin dot up to junction dot -->
+      <line class="stem" x1="100" y1="200" x2="100" y2="200">
+        <animate attributeName="y2" from="200" to="120" begin="0.6s" dur="0.5s" fill="freeze"/>
+      </line>
+
+      <!-- Junction dot (top of stem) -->
+      <circle class="dot" cx="100" cy="120" r="0">
+        <animate attributeName="r" from="0" to="5" begin="1.15s" dur="0.2s" fill="freeze"/>
+      </circle>
+
+      <!-- Left branch: 45° up-left from junction -->
+      <line class="branch" x1="100" y1="120" x2="100" y2="120">
+        <animate attributeName="x2" from="100" to="55"  begin="1.4s" dur="0.45s" fill="freeze"/>
+        <animate attributeName="y2" from="120" to="75" begin="1.4s" dur="0.45s" fill="freeze"/>
+      </line>
+
+      <!-- Right branch: 45° up-right from junction -->
+      <line class="branch" x1="100" y1="120" x2="100" y2="120">
+        <animate attributeName="x2" from="100" to="145" begin="1.4s" dur="0.45s" fill="freeze"/>
+        <animate attributeName="y2" from="120" to="75" begin="1.4s" dur="0.45s" fill="freeze"/>
+      </line>
+
+      <!-- Left flower: outer translate + inner bloom (separated so they don't override each other) -->
+      <g transform="translate(55 75)">
+        <g class="flower flower-left">
+          <ellipse class="petal" cx="0"   cy="-9"  rx="4" ry="7"/>
+          <ellipse class="petal" cx="9"   cy="-3"  rx="4" ry="7" transform="rotate(72 9 -3)"/>
+          <ellipse class="petal" cx="6"   cy="8"   rx="4" ry="7" transform="rotate(144 6 8)"/>
+          <ellipse class="petal" cx="-6"  cy="8"   rx="4" ry="7" transform="rotate(216 -6 8)"/>
+          <ellipse class="petal" cx="-9"  cy="-3"  rx="4" ry="7" transform="rotate(288 -9 -3)"/>
+          <circle class="flower-center" cx="0" cy="0" r="3"/>
+        </g>
+      </g>
+
+      <!-- Right flower: same pattern -->
+      <g transform="translate(145 75)">
+        <g class="flower flower-right">
+          <ellipse class="petal" cx="0"   cy="-9"  rx="4" ry="7"/>
+          <ellipse class="petal" cx="9"   cy="-3"  rx="4" ry="7" transform="rotate(72 9 -3)"/>
+          <ellipse class="petal" cx="6"   cy="8"   rx="4" ry="7" transform="rotate(144 6 8)"/>
+          <ellipse class="petal" cx="-6"  cy="8"   rx="4" ry="7" transform="rotate(216 -6 8)"/>
+          <ellipse class="petal" cx="-9"  cy="-3"  rx="4" ry="7" transform="rotate(288 -9 -3)"/>
+          <circle class="flower-center" cx="0" cy="0" r="3"/>
+        </g>
+      </g>
+    </svg>
+
+    <div class="splash-title">
+      <span>F</span><span>L</span><span>O</span><span>W</span><span>E</span><span>R</span><span>D</span><span>E</span><span>X</span>
+    </div>
+    <div class="splash-tagline">CALIFORNIA · v1.0</div>
+  </div>
 
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
 
