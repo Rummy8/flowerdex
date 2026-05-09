@@ -29,13 +29,6 @@
     .hud-row .val { color:white; flex:1; word-break:break-word; }
     .hud-row .val.dim { color:#cfe; opacity:0.7; }
 
-    /* Top status strip — like Amaranthine's "STANDBY/CONN ESTABLISHED" */
-    .status-bar { position:fixed; top:0; left:0; right:0; height:22px; background:rgba(5,46,22,0.9); border-bottom:1px solid #1f5d3a; display:flex; gap:14px; align-items:center; padding:0 64px 0 12px; font-family:var(--mono); font-size:9px; letter-spacing:1.5px; color:var(--muted); z-index:850; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-    .status-bar .dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation: status-blink 2s infinite; }
-    @keyframes status-blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-    .status-bar .id { margin-left:auto; opacity:0.6; }
-    body { padding-top:22px; }
-
     /* Background grid of tiny + marks */
     body::before {
       content:''; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0.08;
@@ -49,8 +42,10 @@
     .tab { display:none; padding-bottom:70px; }
     .tab.active { display:block; }
     .tabs { position:fixed; bottom:0; width:100%; display:flex; background:var(--panel); z-index:800; }
-    .tab-btn { flex:1; padding:14px 4px 12px; text-align:center; color:#86efac; cursor:pointer; font-size:11px; font-family:var(--mono); letter-spacing:2px; text-transform:uppercase; border-top:2px solid transparent; }
+    .tab-btn { flex:1; padding:10px 4px; text-align:center; color:#86efac; cursor:pointer; border-top:2px solid transparent; display:flex; align-items:center; justify-content:center; min-height:50px; }
+    .tab-btn svg { width:24px; height:24px; opacity:0.6; transition: opacity 0.2s; }
     .tab-btn.active { background:transparent; color:var(--green); border-top-color: var(--green); box-shadow: inset 0 24px 32px -20px rgba(74,222,128,0.35); }
+    .tab-btn.active svg { opacity:1; }
 
     /* Subtle CRT scanlines across the whole app — gives that dex/cyberpunk feel */
     body::after {
@@ -89,7 +84,7 @@
     .thumb { width:96px; height:96px; object-fit:cover; border-radius:10px; flex-shrink:0; }
 
     /* Detail modal */
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; }
+    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; }
     .modal-content { background:var(--panel); max-width:90%; width:100%; max-width:480px; border-radius:16px; padding:20px; text-align:center; max-height:90vh; overflow-y:auto; box-sizing:border-box; }
     .modal img { width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:15px; }
 
@@ -199,7 +194,7 @@
     .gear-btn { position:fixed; top:12px; right:12px; background:rgba(15,61,42,0.92); color:var(--green); border:1px solid var(--green); width:42px; height:42px; padding:0; margin:0; border-radius:50%; font-size:20px; z-index:900; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 
     /* Settings modal */
-    .settings-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px; }
+    .settings-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px; }
     .settings-modal.show { display:flex; }
     .settings-content { background:var(--panel); max-width:420px; width:100%; border-radius:16px; padding:24px; max-height:90vh; overflow-y:auto; box-sizing:border-box; }
     .settings-content h2 { color:var(--green); margin:0 0 20px; }
@@ -327,9 +322,13 @@
     .scan-edges.draw path { animation: dash 2s ease-out forwards; }
     @keyframes dash { to { stroke-dashoffset:0; } }
 
-    /* Chat */
-    .chat-container { display:flex; flex-direction:column; height:100vh; padding-bottom:56px; box-sizing:border-box; }
-    .chat-header { padding:14px 60px 12px 20px; color:var(--green); font-size:22px; font-weight:bold; flex-shrink:0; border-bottom:1px solid #1a3d2a; }
+    /* Chat — now a full-screen overlay opened from settings */
+    .chat-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:var(--dark); z-index:1100; flex-direction:column; }
+    .chat-overlay.show { display:flex; }
+    .chat-container { display:flex; flex-direction:column; height:100%; box-sizing:border-box; }
+    .chat-header { padding:14px 20px 12px; color:var(--green); font-size:22px; font-weight:bold; flex-shrink:0; border-bottom:1px solid #1a3d2a; display:flex; align-items:center; justify-content:space-between; }
+    .chat-close { background:transparent; border:none; color:#aaa; font-size:24px; cursor:pointer; padding:4px 10px; width:auto; margin:0; border-radius:50%; }
+    .chat-close:active { color:var(--green); }
     .chat-messages { flex:1; overflow-y:auto; padding:16px 14px; }
     .chat-empty { text-align:center; padding:60px 20px; color:#aaa; line-height:1.5; }
     .chat-bubble { max-width:82%; padding:10px 14px; margin-bottom:10px; border-radius:14px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
@@ -339,6 +338,16 @@
     .chat-input-row { display:flex; gap:8px; padding:10px 12px; background:var(--panel-deep); border-top:1px solid #1a3d2a; flex-shrink:0; }
     .chat-input-row input { flex:1; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:9999px; padding:12px 16px; font-size:16px; outline:none; }
     .chat-send { width:auto; padding:10px 20px; margin:0; flex-shrink:0; }
+
+    /* Hub sub-tabs (Achievements / Logs at top of tab 2) */
+    .hub-tabs { display:flex; padding:14px 14px 0; gap:0; border-bottom:1px solid #1a3d2a; }
+    .hub-tab-btn { flex:1; padding:12px; text-align:center; color:#888; cursor:pointer; font-weight:bold; font-size:14px; border-bottom:2px solid transparent; transition: color 0.15s, border-color 0.15s; }
+    .hub-tab-btn.active { color:var(--green); border-bottom-color: var(--green); }
+
+    /* Settings action button (e.g. Open Botanist AI link) */
+    .settings-action-btn { width:100%; margin:0 0 16px; padding:12px 14px; background:var(--panel-deep); color:white; border:1px solid #2d5a3a; border-radius:10px; display:flex; align-items:center; gap:12px; font-size:15px; font-weight:600; cursor:pointer; }
+    .settings-action-btn:active { background:#0f3d2a; }
+    .settings-section-divider { color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:2px; opacity:0.6; margin:8px 0 14px; padding-top:14px; border-top:1px solid #1a3d2a; }
   </style>
   <script src="https://unpkg.com/localforage@1.10.0/dist/localforage.min.js"></script>
   <script>
@@ -803,8 +812,10 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     async function loadFlowers() {
       flowers = await db.getItem('flowers') || [];
       renderCollection();
-      renderAchievements();
-      renderLogs();
+      // Refresh the achievements hub if it's the active tab
+      if (document.getElementById('tab2')?.classList.contains('active')) {
+        renderAchievementsHub();
+      }
       checkAchievements({ silent: true });
     }
 
@@ -829,8 +840,10 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       flowers.unshift(entry);
       await db.setItem('flowers', flowers);
       renderCollection();
-      renderLogs();
-      renderAchievements();
+      // If the achievements hub is currently visible, refresh whichever pane is active
+      if (document.getElementById('tab2')?.classList.contains('active')) {
+        renderAchievementsHub();
+      }
       checkAchievements();
     }
 
@@ -856,19 +869,17 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const cardsHtml = flowers.map(f => {
         const master = f.masterId ? MASTER_FLOWERS.find(m => m.id === f.masterId) : null;
         const rarityClass = master ? 'rarity-' + master.rar.toLowerCase() : '';
-        const dexNum = master ? master.id : '???/???';
         const rarityLbl = master ? master.rar.toUpperCase() : 'UNKNOWN';
         const date = new Date(f.timestamp);
         const ts = date.toISOString().slice(0,10).replace(/-/g,'.');
         return `
           <div class="card hud-card ${rarityClass}" onclick="showDetail(${f.id})">
             <div class="card-meta">
-              <span class="dex-num">${escapeHtml(dexNum)}</span>
               <span class="rarity-tag">${rarityLbl}</span>
             </div>
             <div class="card-body">
               <div class="card-text">
-                <h3>${escapeHtml(f.common)}</h3>
+                <h3>${escapeHtml(titleCase(f.common))}</h3>
                 <span class="sci">${escapeHtml(f.scientific)}</span>
                 <div class="card-fields">
                   <span class="lbl">SCAN_DATE</span><span class="val">${ts}</span>
@@ -908,9 +919,9 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
               <span class="hud-modal-id">// SPECIMEN RECORD</span>
               <span class="hud-modal-id" style="color:var(--green);">${escapeHtml(dexNum)} / 300</span>
             </div>
-            <img src="${flower.photo}" alt="${escapeHtml(flower.common)}" class="hud-modal-img">
+            <img src="${flower.photo}" alt="${escapeHtml(titleCase(flower.common))}" class="hud-modal-img">
             <div class="hud-modal-content">
-              <h2 style="margin:0 0 2px;">${escapeHtml(flower.common)}</h2>
+              <h2 style="margin:0 0 2px;">${escapeHtml(titleCase(flower.common))}</h2>
               <i style="color:var(--muted); font-size:13px;">${escapeHtml(flower.scientific)}</i>
               <div class="rarity-line rarity-${rarityClass}">RARITY: ${rarityStr}</div>
 
@@ -1003,8 +1014,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
        Tap a card to drill down into the list view.
     ─────────────────────────────────────────────── */
     function renderLogs() {
-      const tab = document.getElementById('tab2');
-      if (!tab) return;
+      const pane = document.getElementById('hub-pane');
+      if (!pane) return;
 
       // Compute progress totals for the category cards
       const biomeCounts  = getMasterCounts('bio');
@@ -1029,9 +1040,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           </div>`;
       };
 
-      tab.innerHTML = `
-        <h2 style="padding:20px 20px 0; color:var(--green);">Logs</h2>
-        <p style="padding:0 20px; color:#aaa; font-size:13px; margin:6px 0 0;">Progress against the California master list (300 species)</p>
+      pane.innerHTML = `
+        <p style="padding:14px 20px 0; color:#aaa; font-size:13px; margin:0;">Progress against the California master list (300 species)</p>
         <div class="cat-grid">
           ${card('🌐', 'By Biome',  totalBiomeFound, totalBiomeTotal, "openLogDrillDown('bio')")}
           ${card('🧬', 'By Family', totalFamFound,   totalFamTotal,   "openLogDrillDown('fam')")}
@@ -1039,8 +1049,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
     }
 
     function openLogDrillDown(field) {
-      const tab = document.getElementById('tab2');
-      if (!tab) return;
+      const pane = document.getElementById('hub-pane');
+      if (!pane) return;
       const counts = getMasterCounts(field);
       const heading = field === 'bio' ? 'By Biome' : 'By Family';
       const sorted = Object.entries(counts).sort((a, b) => b[1].total - a[1].total);
@@ -1057,8 +1067,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           </div>`;
       }).join('');
 
-      tab.innerHTML = `
-        <button class="back-btn" onclick="renderLogs()">← Logs</button>
+      pane.innerHTML = `
+        <button class="back-btn" onclick="renderLogs()">← Categories</button>
         <h2 style="padding:14px 20px 0; color:var(--green);">${heading}</h2>
         <div style="margin-top:6px;">${rows}</div>`;
     }
@@ -1078,7 +1088,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
         <div class="species-row ${isFound ? 'found' : 'unfound'}" onclick="event.stopPropagation(); showSpeciesDetail('${s.id}')">
           <div class="row-sprite ${isFound ? '' : 'silhouette'}">${sprite}</div>
           <div class="row-text">
-            <span class="com">${escapeHtml(s.com)}</span>
+            <span class="com">${escapeHtml(titleCase(s.com))}</span>
             <span class="sci">${escapeHtml(s.sci)}</span>
           </div>
           <span class="marker">${isFound ? '✓' : '🔒'}</span>
@@ -1115,7 +1125,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
 
       // Use the user's photo if they've scanned it, otherwise show procedural sprite
       const photoBlock = isFound
-        ? `<img src="${userScans[0].photo}" alt="${escapeHtml(m.com)}" style="width:100%; max-height:260px; object-fit:cover; border-radius:12px; margin-bottom:12px;">`
+        ? `<img src="${userScans[0].photo}" alt="${escapeHtml(titleCase(m.com))}" style="width:100%; max-height:260px; object-fit:cover; border-radius:12px; margin-bottom:12px;">`
         : `<div class="species-placeholder">
              <div class="big-sprite silhouette">${generateFlowerSprite(m)}</div>
              <div style="color:#666; font-size:12px; margin-top:8px; letter-spacing:1.5px;">— LOCKED — FIND IN THE WILD —</div>
@@ -1144,7 +1154,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:520px; text-align:left;">
             ${photoBlock}
             <div style="text-align:center;">${statusBanner}</div>
-            <h2 style="margin:0 0 4px;">${escapeHtml(m.com)}</h2>
+            <h2 style="margin:0 0 4px;">${escapeHtml(titleCase(m.com))}</h2>
             <i style="color:#cfe; display:block; margin-bottom:12px;">${escapeHtml(m.sci)}</i>
             <div style="margin-bottom:14px;">${badges.join(' ')}</div>
 
@@ -1320,9 +1330,38 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       mastery:    { label:'Mastery',    icon:'🏆' },
     };
 
-    async function renderAchievements() {
-      const tab = document.getElementById('tab3');
+    /* ───────────────────────────────────────────────
+       ACHIEVEMENTS HUB — top-level wrapper for tab 2
+       Contains two sub-tabs: Achievements (default) | Logs
+       activeAchHubPane is the persistent preference within a session.
+    ─────────────────────────────────────────────── */
+    let activeAchHubPane = 'ach'; // 'ach' | 'logs'
+
+    function renderAchievementsHub() {
+      const tab = document.getElementById('tab2');
       if (!tab) return;
+      tab.innerHTML = `
+        <div class="hub-tabs">
+          <div class="hub-tab-btn ${activeAchHubPane === 'ach'  ? 'active' : ''}" onclick="switchAchHub('ach')">Achievements</div>
+          <div class="hub-tab-btn ${activeAchHubPane === 'logs' ? 'active' : ''}" onclick="switchAchHub('logs')">Logs</div>
+        </div>
+        <div id="hub-pane"></div>`;
+      // Populate the active pane
+      if (activeAchHubPane === 'ach') {
+        renderAchievements();
+      } else {
+        renderLogs();
+      }
+    }
+
+    function switchAchHub(pane) {
+      activeAchHubPane = pane;
+      renderAchievementsHub();
+    }
+
+    async function renderAchievements() {
+      const pane = document.getElementById('hub-pane');
+      if (!pane) return;
 
       // Compute unlocked counts per section
       const unlockedSet = new Set(await db.getItem('unlocked') || []);
@@ -1330,8 +1369,6 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       ACHIEVEMENTS.forEach(a => {
         if (!sectionStats[a.section]) sectionStats[a.section] = { total: 0, unlocked: 0 };
         sectionStats[a.section].total++;
-        // Use stored "seen" set so the count survives reloads even if the user
-        // navigated away before saveFlower ran. Recheck live for fresh state.
         if (a.check(flowers) || unlockedSet.has(a.id)) sectionStats[a.section].unlocked++;
       });
 
@@ -1352,15 +1389,14 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           </div>`;
       }).join('');
 
-      tab.innerHTML = `
-        <h2 style="padding:20px 20px 0; color:var(--green);">Achievements</h2>
-        <p style="padding:0 20px; color:#aaa; font-size:13px; margin:6px 0 0;">Tap a category to see what's inside</p>
+      pane.innerHTML = `
+        <p style="padding:14px 20px 0; color:#aaa; font-size:13px; margin:0;">Tap a category to see what's inside</p>
         <div class="cat-grid">${cards}</div>`;
     }
 
     function openAchievementSection(section) {
-      const tab = document.getElementById('tab3');
-      if (!tab) return;
+      const pane = document.getElementById('hub-pane');
+      if (!pane) return;
       const meta = ACH_SECTION_META[section] || { label: section, icon: '🏅' };
       const items = ACHIEVEMENTS.filter(a => a.section === section);
 
@@ -1374,8 +1410,8 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           </div>`;
       }).join('');
 
-      tab.innerHTML = `
-        <button class="back-btn" onclick="renderAchievements()">← Achievements</button>
+      pane.innerHTML = `
+        <button class="back-btn" onclick="renderAchievements()">← Categories</button>
         <h2 style="padding:14px 20px 0; color:var(--green);">${meta.icon} ${meta.label}</h2>
         <div style="margin-top:6px;">${rowsHtml}</div>`;
     }
@@ -1647,7 +1683,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       }
       await saveFlower(resized, ai);
       setStatus(`SPECIMEN LOGGED: ${ai.commonName.toUpperCase()}`, 4000);
-      showToast(`✨ Added <strong>${escapeHtml(ai.commonName)}</strong> to your collection`);
+      showToast(`✨ Added <strong>${escapeHtml(titleCase(ai.commonName))}</strong> to your collection`);
     }
 
     function beginScan() {
@@ -1711,6 +1747,22 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
 ${summary}`;
     }
 
+    function openChatOverlay() {
+      // Closing settings modal first so the chat overlay sits cleanly on top of nothing
+      closeSettings();
+      const overlay = document.getElementById('chat-overlay');
+      if (!overlay) return;
+      overlay.classList.add('show');
+      renderChat();
+      // Focus the input so the keyboard pops up on mobile
+      setTimeout(() => document.getElementById('chat-input')?.focus(), 100);
+    }
+
+    function closeChatOverlay() {
+      const overlay = document.getElementById('chat-overlay');
+      if (overlay) overlay.classList.remove('show');
+    }
+
     async function sendChatMessage() {
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
@@ -1759,20 +1811,45 @@ ${summary}`;
     function escapeAttr(s) {
       return String(s ?? '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     }
+    /**
+     * Title-case a flower name. Capitalizes every word, with a small list of
+     * minor words that stay lowercase mid-name (e.g. "Lily-of-the-valley").
+     * Hyphens and apostrophes preserved. Short scientific suffixes like "var.",
+     * "ssp." are left as-is (they're inside the scientific name, not common).
+     */
+    function titleCase(s) {
+      if (!s) return s;
+      const minor = new Set(['of', 'the', 'and', 'in', 'on', 'a', 'an', 'with', 'to', 'for']);
+      return String(s).split(/(\s+|-+)/).map((part, i) => {
+        if (/^\s+$/.test(part) || /^-+$/.test(part)) return part;
+        const lower = part.toLowerCase();
+        if (i > 0 && minor.has(lower)) return lower;
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      }).join('');
+    }
 
     /* ───────────────────────────────────────────────
        TAB NAV
     ─────────────────────────────────────────────── */
     function switchTab(n) {
+      // Close any open modals/settings when switching tabs (since the tab bar
+      // is now always visible, taps can come through during a modal view)
+      document.querySelectorAll('.modal').forEach(m => m.remove());
+      const settings = document.getElementById('settings-modal');
+      if (settings) settings.classList.remove('show');
+      // Also close chat overlay if open
+      const chatOverlay = document.getElementById('chat-overlay');
+      if (chatOverlay) chatOverlay.classList.remove('show');
+
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById('tab'+n).classList.add('active');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
-      if (n === 1) loadFlowers();
-      if (n === 2) renderLogs();
-      if (n === 3) renderAchievements();
-      if (n === 4) renderChat();
-      if (n !== 0 && currentStream) cancelScan();
+      // Tab 0 = Dex/Collection, 1 = Scan, 2 = Achievements
+      if (n === 0) loadFlowers();
+      if (n === 2) renderAchievementsHub();
+      // Stop the camera stream if user navigates away from Scan
+      if (n !== 1 && currentStream) cancelScan();
     }
 
     function dismissSplash() {
@@ -1822,29 +1899,13 @@ ${summary}`;
     /* ───────────────────────────────────────────────
        STATUS BAR — top HUD strip
     ─────────────────────────────────────────────── */
-    function setStatus(msg, durationMs = 0) {
-      const el = document.getElementById('status-msg');
-      if (!el) return;
-      el.textContent = msg;
-      if (durationMs > 0) {
-        clearTimeout(el._resetTimer);
-        el._resetTimer = setTimeout(() => { el.textContent = 'SYSTEM ONLINE'; }, durationMs);
-      }
-    }
-
-    function initStatusBar() {
-      // Random session ID — looks like a real auth session token
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let id = '';
-      for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
-      const sidEl = document.getElementById('session-id');
-      if (sidEl) sidEl.textContent = id;
-    }
+    // No-op kept so existing call sites (capturePhoto, etc.) don't break
+    // after the status bar was removed. Could be re-enabled later.
+    function setStatus() {}
 
     window.onload = () => {
       loadFlowers();
       renderChat();
-      initStatusBar();
     };
   </script>
 </head>
@@ -1911,22 +1972,21 @@ ${summary}`;
     <div class="splash-tagline">CALIFORNIA · v1.0</div>
   </div>
 
-  <!-- Top status strip (HUD-style) -->
-  <div class="status-bar" id="status-bar">
-    <span class="dot"></span>
-    <span>FLOWERDEX</span>
-    <span style="opacity:0.5;">v1.0</span>
-    <span style="opacity:0.4;">|</span>
-    <span id="status-msg">SYSTEM ONLINE</span>
-    <span class="id" id="status-id">SES_<span id="session-id"></span></span>
-  </div>
-
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
 
   <!-- Settings modal -->
   <div id="settings-modal" class="settings-modal" onclick="if(event.target.id==='settings-modal')closeSettings()">
     <div class="settings-content">
       <h2>⚙️ Settings</h2>
+
+      <button onclick="openChatOverlay()" class="settings-action-btn">
+        <span style="font-size:22px;">💬</span>
+        <span>Open Botanist AI</span>
+        <span style="margin-left:auto; opacity:0.5;">→</span>
+      </button>
+
+      <div class="settings-section-divider">API CONFIGURATION</div>
+
       <div class="input-row">
         <label>Anthropic API key</label>
         <input id="setting-apikey" type="password" placeholder="sk-ant-...">
@@ -1973,8 +2033,14 @@ ${summary}`;
     <div id="scan-status" class="scan-status">SCANNING…</div>
   </div>
 
-  <!-- TAB 0: Scanner -->
-  <div id="tab0" class="tab active">
+  <!-- TAB 0: Dex (Collection) -->
+  <div id="tab0" class="tab">
+    <h2 style="padding:20px; color:var(--green);">Your Collection</h2>
+    <div id="collection"></div>
+  </div>
+
+  <!-- TAB 1: Scanner (default active, middle tab) -->
+  <div id="tab1" class="tab active">
     <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column;">
       <div style="margin-top:40px;">
         <div style="font-size:72px; line-height:1;">🌸</div>
@@ -1996,22 +2062,16 @@ ${summary}`;
     </div>
   </div>
 
-  <!-- TAB 1: Collection -->
-  <div id="tab1" class="tab">
-    <h2 style="padding:20px; color:var(--green);">Your Collection</h2>
-    <div id="collection"></div>
-  </div>
-
-  <!-- TAB 2: Logs (category cards: By Biome / By Family) -->
+  <!-- TAB 2: Achievements + Logs (sub-tabs) -->
   <div id="tab2" class="tab"></div>
 
-  <!-- TAB 3: Achievements (category cards) -->
-  <div id="tab3" class="tab"></div>
-
-  <!-- TAB 4: Chat -->
-  <div id="tab4" class="tab">
+  <!-- Chat overlay (opened from Settings, not a tab anymore) -->
+  <div id="chat-overlay" class="chat-overlay">
     <div class="chat-container">
-      <div class="chat-header">Botanist AI</div>
+      <div class="chat-header">
+        <span>Botanist AI</span>
+        <button onclick="closeChatOverlay()" class="chat-close" aria-label="Close chat">✕</button>
+      </div>
       <div id="chat-messages" class="chat-messages"></div>
       <div class="chat-input-row">
         <input id="chat-input" type="text" placeholder="Ask about plants, recipes, your collection…" onkeydown="if(event.key==='Enter')sendChatMessage()">
@@ -2021,11 +2081,15 @@ ${summary}`;
   </div>
 
   <div class="tabs">
-    <div class="tab-btn active" onclick="switchTab(0)">[01] SCAN</div>
-    <div class="tab-btn" onclick="switchTab(1)">[02] DEX</div>
-    <div class="tab-btn" onclick="switchTab(2)">[03] LOGS</div>
-    <div class="tab-btn" onclick="switchTab(3)">[04] ACH</div>
-    <div class="tab-btn" onclick="switchTab(4)">[05] AI</div>
+    <div class="tab-btn" onclick="switchTab(0)" aria-label="Dex">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div class="tab-btn active" onclick="switchTab(1)" aria-label="Scan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </div>
+    <div class="tab-btn" onclick="switchTab(2)" aria-label="Achievements">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><path d="M6 3h12v8a6 6 0 0 1-12 0z"/><path d="M9 21h6"/><path d="M12 17v4"/></svg>
+    </div>
   </div>
 
 </body>
