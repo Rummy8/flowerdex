@@ -81,14 +81,15 @@
     .auto-cam-row { display:flex; align-items:center; gap:10px; margin-top:24px; justify-content:center; color:var(--muted); }
 
     /* Floating auto-cam toggle (top-right under gear, Scan tab only) */
-    .auto-cam-floating { position:fixed; top:62px; right:14px; z-index:900; display:none; align-items:center; gap:8px; color:var(--muted); padding:6px 10px; background:rgba(15,61,42,0.92); border:1px solid #1f5d3a; border-radius:9999px; }
+    .auto-cam-floating { position:fixed; top:62px; right:14px; z-index:900; display:none; align-items:center; gap:8px; color:var(--muted); padding:6px 10px; background:rgba(15,61,42,0.92); border:1px solid #1f5d3a; border-radius:9999px; cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; }
     body.on-scan-tab .auto-cam-floating { display:flex; }
 
     /* Active scan screen — full-bleed video + round capture button */
     .scan-preview { width:100%; height:calc(100vh - 50px); object-fit:cover; background:#000; display:block; }
     .scan-close-btn { position:absolute; top:14px; right:14px; width:38px; height:38px; padding:0; margin:0; background:rgba(0,0,0,0.55); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:50%; font-size:24px; line-height:1; z-index:5; }
     .scan-close-btn:active { background:rgba(0,0,0,0.85); }
-    .capture-round-btn { position:absolute; bottom:80px; left:50%; transform:translateX(-50%); width:78px; height:78px; padding:0; margin:0; background:var(--green); color:var(--dark); border:4px solid #fff; border-radius:50%; box-shadow: 0 0 24px rgba(74,222,128,0.6); display:flex; align-items:center; justify-content:center; z-index:5; }
+    /* Capture button: lifted well above tab bar (50px) + iOS safe area + breathing room */
+    .capture-round-btn { position:absolute; bottom:calc(120px + env(safe-area-inset-bottom, 0px)); left:50%; transform:translateX(-50%); width:78px; height:78px; padding:0; margin:0; background:var(--green); color:var(--dark); border:4px solid #fff; border-radius:50%; box-shadow: 0 0 24px rgba(74,222,128,0.6); display:flex; align-items:center; justify-content:center; z-index:5; }
     .capture-round-btn:active { transform:translateX(-50%) scale(0.93); }
     .switch { position:relative; display:inline-block; width:42px; height:24px; }
     .switch input { opacity:0; width:0; height:0; }
@@ -2597,10 +2598,10 @@ ${summary}`;
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
 
   <!-- Auto-camera toggle (top-right, under gear) — only visible on Scan tab -->
-  <div class="auto-cam-floating" id="auto-cam-floating">
+  <label class="auto-cam-floating" id="auto-cam-floating">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     <span class="switch"><input type="checkbox" class="auto-cam-checkbox" onchange="toggleAutoCam(this.checked)"><span class="slider"></span></span>
-  </div>
+  </label>
 
   <!-- Profile modal -->
   <div id="profile-modal" class="profile-modal" onclick="if(event.target.id==='profile-modal')closeProfile()">
