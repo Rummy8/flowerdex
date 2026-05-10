@@ -80,6 +80,13 @@
     /* Auto-camera toggle */
     .auto-cam-toggle { display:inline-flex; align-items:center; gap:10px; margin-top:18px; color:#cfe; font-size:14px; cursor:pointer; user-select:none; }
     .auto-cam-toggle svg { color:var(--muted); }
+
+    /* Active scan screen — full-bleed video + round capture button */
+    .scan-preview { width:100%; height:calc(100vh - 50px); object-fit:cover; background:#000; display:block; }
+    .scan-close-btn { position:absolute; top:14px; right:14px; width:38px; height:38px; padding:0; margin:0; background:rgba(0,0,0,0.55); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:50%; font-size:24px; line-height:1; z-index:5; }
+    .scan-close-btn:active { background:rgba(0,0,0,0.85); }
+    .capture-round-btn { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:78px; height:78px; padding:0; margin:0; background:var(--green); color:var(--dark); border:4px solid #fff; border-radius:50%; box-shadow: 0 0 24px rgba(74,222,128,0.6); display:flex; align-items:center; justify-content:center; z-index:5; }
+    .capture-round-btn:active { transform:translateX(-50%) scale(0.93); }
     .switch { position:relative; display:inline-block; width:42px; height:24px; }
     .switch input { opacity:0; width:0; height:0; }
     .switch .slider { position:absolute; cursor:pointer; inset:0; background:#1a3d2a; border:1px solid #2d5a3a; border-radius:9999px; transition: background 0.2s; }
@@ -108,6 +115,20 @@
     .hud-modal-top { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#0a2218; border-bottom:1px solid #1f5d3a; font-family:var(--mono); font-size:10px; letter-spacing:1.5px; }
     .hud-modal-id { color:var(--muted); }
     .hud-modal-img { width:100%; max-height:200px; object-fit:cover; border-radius:0; margin:0; display:block; }
+
+    /* Compact detail modal pieces */
+    .mini-tag-row { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0; }
+    .mini-tag { display:inline-block; background:var(--panel-deep); color:var(--muted); border:1px solid #1f5d3a; padding:2px 8px; border-radius:9999px; font-size:11px; font-family:var(--mono); }
+    .mini-tag.native { color:var(--green); border-color:var(--green); }
+    .mini-tag.toxic  { color:#fca5a5; border-color:#7f1d1d; }
+    .compact-meta { color:#888; font-size:11px; font-family:var(--mono); letter-spacing:0.5px; padding:6px 0; border-top:1px solid #1a3d2a; margin-top:6px; }
+    .map-btn { width:100%; margin:10px 0 0; padding:10px; background:transparent; color:var(--green); border:1px solid var(--green); border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; }
+    .map-btn:active { background:rgba(74,222,128,0.15); }
+
+    /* Found vs Biome map */
+    .found-vs-biome-map { width:100%; max-width:280px; height:auto; display:block; margin:0 auto; }
+    .map-legend { display:flex; flex-direction:column; gap:4px; font-size:11px; color:#cfe; margin-bottom:12px; }
+    .legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
     .hud-modal-content { padding:14px 16px; }
     .hud-modal-content h2 { font-family: system-ui; }
     .hud-modal-content i { font-family: system-ui; }
@@ -155,6 +176,11 @@
 
     /* Log rows */
     .log-row { background:var(--panel); margin:10px 14px; padding:14px; border-radius:12px; cursor:pointer; }
+
+    /* Flat-list section dividers (Achievements + Logs) */
+    .flat-section-header { padding:18px 20px 8px; color:var(--green); font-family:var(--mono); font-size:12px; letter-spacing:2px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #1a3d2a; margin-top:8px; }
+    .flat-section-header:first-child { border-top:none; margin-top:0; }
+    .flat-section-count { color:var(--muted); opacity:0.7; font-size:11px; }
     .log-row.complete { background:#0a3d1f; }
     .log-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .log-row-head .name { font-weight:bold; font-size:16px; }
@@ -205,44 +231,48 @@
     /* Settings gear button (top-right) */
     .gear-btn { position:fixed; top:12px; right:12px; background:rgba(15,61,42,0.92); color:var(--green); border:1px solid var(--green); width:42px; height:42px; padding:0; margin:0; border-radius:50%; font-size:20px; z-index:900; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 
-    /* Profile button (top-left) — avatar circle */
-    .profile-btn { position:fixed; top:12px; left:12px; background:rgba(15,61,42,0.92); color:var(--green); border:1px solid var(--green); width:42px; height:42px; padding:0; margin:0; border-radius:50%; z-index:900; cursor:pointer; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-    .profile-btn span { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
-    .profile-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-    .profile-btn svg { width:24px; height:24px; }
+    /* Profile button (top-left) — pill with avatar + colored name */
+    .profile-btn { position:fixed; top:12px; left:12px; background:rgba(15,61,42,0.92); border:1px solid var(--green); padding:3px 12px 3px 3px; margin:0; height:42px; border-radius:9999px; z-index:900; cursor:pointer; display:flex; align-items:center; gap:8px; max-width:60vw; }
+    .profile-btn-avatar { width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#0a2218; color:var(--green); }
+    .profile-btn-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .profile-btn-avatar svg { width:22px; height:22px; }
+    .profile-btn-name { color:var(--green); font-weight:bold; font-size:14px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
     /* Profile modal */
     .profile-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.9); z-index:1100; align-items:center; justify-content:center; padding:20px; }
     .profile-modal.show { display:flex; }
-    .profile-content { background:var(--panel); max-width:480px; width:100%; border-radius:16px; padding:24px; max-height:90vh; overflow-y:auto; box-sizing:border-box; text-align:left; }
-    .profile-content h2 { color:var(--green); margin:0 0 8px; }
-    .profile-section-title { color:var(--muted); font-family:var(--mono); font-size:11px; letter-spacing:2px; margin:18px 0 10px; padding-top:14px; border-top:1px solid #1a3d2a; }
+    .profile-content { background:var(--panel); max-width:480px; width:100%; border-radius:16px; padding:18px; max-height:90vh; overflow-y:auto; box-sizing:border-box; text-align:left; }
+    .profile-content h2 { color:var(--green); margin:0 0 4px; font-size:20px; }
+    .profile-section-title { color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:1.5px; margin:14px 0 6px; padding-top:10px; border-top:1px solid #1a3d2a; }
 
-    /* Avatar picker grid */
-    .avatar-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; }
-    .avatar-option { aspect-ratio:1/1; background:var(--panel-deep); border:2px solid transparent; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; transition: border-color 0.15s; }
+    /* Avatar picker grid — tighter */
+    .avatar-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
+    .avatar-option { aspect-ratio:1/1; background:var(--panel-deep); border:2px solid transparent; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:6px; transition: border-color 0.15s; }
     .avatar-option.selected { border-color: var(--green); box-shadow:0 0 12px rgba(74,222,128,0.4); }
     .avatar-option svg { width:100%; height:100%; color:var(--green); }
     .avatar-option img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
     .avatar-option.upload { color:#aaa; font-size:24px; }
 
-    /* Name + color row */
+    /* Name + color row — compact */
     .name-input-row { display:flex; gap:8px; align-items:center; }
-    .name-input-row input { flex:1; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:8px; padding:10px 12px; font-size:15px; box-sizing:border-box; }
+    .name-input-row input { flex:1; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:8px; padding:8px 12px; font-size:15px; box-sizing:border-box; }
     .name-input-row input.preview { font-weight:bold; }
-    .color-swatches { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-    .color-swatch { width:30px; height:30px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition: border-color 0.15s, transform 0.1s; }
+    .color-swatches { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+    .color-swatch { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition: border-color 0.15s, transform 0.1s; }
     .color-swatch.selected { border-color:white; transform: scale(1.15); }
 
-    /* Top-3 + top-achievement slots */
-    .pick-slot { background:var(--panel-deep); border:1px dashed #1f5d3a; border-radius:10px; padding:12px; margin-bottom:8px; display:flex; align-items:center; gap:12px; cursor:pointer; min-height:60px; }
-    .pick-slot.filled { border-style:solid; border-color:var(--green); }
-    .pick-slot .slot-label { font-family:var(--mono); font-size:10px; letter-spacing:1px; color:var(--muted); min-width:40px; }
-    .pick-slot .slot-name { font-weight:bold; color:white; }
-    .pick-slot .slot-empty { color:#666; font-style:italic; font-size:13px; }
-    .pick-slot .slot-thumb { width:40px; height:40px; border-radius:6px; object-fit:cover; }
-    .pick-slot .slot-clear { margin-left:auto; color:#666; font-size:18px; padding:4px 8px; }
-    .pick-slot .slot-clear:active { color:#fca5a5; }
+    /* Slot rows + Assign/Change buttons (more compact) */
+    .pick-row { background:var(--panel-deep); border:1px solid #1f5d3a; border-radius:8px; padding:8px 10px; margin-bottom:6px; display:flex; align-items:center; gap:10px; min-height:44px; }
+    .pick-row.filled { border-color:var(--green); }
+    .pick-row .slot-label { font-family:var(--mono); font-size:10px; letter-spacing:1px; color:var(--muted); min-width:24px; }
+    .pick-row .slot-name { font-weight:bold; color:white; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; }
+    .pick-row .slot-empty { color:#888; font-style:italic; font-size:13px; flex:1; }
+    .pick-row .slot-thumb { width:32px; height:32px; border-radius:5px; object-fit:cover; flex-shrink:0; }
+    .pick-row .slot-icon { font-size:22px; flex-shrink:0; }
+    .assign-btn { width:auto; margin:0; padding:5px 12px; background:transparent; color:var(--green); border:1px solid var(--green); border-radius:9999px; font-size:11px; letter-spacing:1px; font-family:var(--mono); cursor:pointer; flex-shrink:0; }
+    .assign-btn:active { background:rgba(74,222,128,0.15); }
+    .assign-btn.clear { color:#fca5a5; border-color:#7f1d1d; }
+    .assign-btn.clear:active { background:rgba(252,165,165,0.1); }
 
     /* Sign-in mock */
     .signin-card { background:var(--panel-deep); border:1px solid #1f5d3a; border-radius:10px; padding:14px; }
@@ -980,52 +1010,118 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       if (!flower) return;
       const master = flower.masterId ? MASTER_FLOWERS.find(m => m.id === flower.masterId) : null;
       const ts = new Date(flower.timestamp);
-      const tsStr = ts.toISOString().slice(0,16).replace('T', ' ').replace(/-/g, '.');
+      const tsStr = ts.toISOString().slice(0, 10).replace(/-/g, '.');
 
       const dexNum = master ? master.id : '???/???';
       const rarityStr = master ? master.rar.toUpperCase() : 'UNKNOWN';
       const rarityClass = master ? master.rar.toLowerCase() : 'common';
-      const edibleStr = master ? (master.edi ? 'YES' : 'NO') : '—';
-      const toxicStr = master ? (master.tox ? 'YES — DO NOT INGEST' : 'NO') : '—';
-      const nativeStr = master ? (master.nat ? 'CALIFORNIA NATIVE' : 'INTRODUCED') : '—';
 
-      const gpsStr = flower.location
-        ? `${flower.location.lat.toFixed(4)}°, ${flower.location.lng.toFixed(4)}°`
-        : 'GPS UNAVAILABLE';
+      // Tags row — biome / family / native badge if applicable
+      const tags = [];
+      if (flower.biome)  tags.push(`<span class="mini-tag">${escapeHtml(flower.biome)}</span>`);
+      if (flower.family) tags.push(`<span class="mini-tag">${escapeHtml(flower.family)}</span>`);
+      if (master?.nat)   tags.push(`<span class="mini-tag native">Native</span>`);
+      if (master?.tox)   tags.push(`<span class="mini-tag toxic">⚠ Toxic</span>`);
+
+      // Only show map button if we have a scan location AND a known biome
+      const hasMap = flower.location && flower.biome;
+      const mapBtn = hasMap
+        ? `<button class="map-btn" onclick="showFoundVsBiomeMap(${id})">📍 Show on Map</button>`
+        : '';
 
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
           <div class="modal-content hud-modal" onclick="event.stopImmediatePropagation()">
             <div class="hud-modal-top">
-              <span class="hud-modal-id">// SPECIMEN RECORD</span>
-              <span class="hud-modal-id" style="color:var(--green);">${escapeHtml(dexNum)} / 300</span>
+              <span class="hud-modal-id">${escapeHtml(dexNum)}</span>
+              <span class="hud-modal-id rarity-line rarity-${rarityClass}" style="margin:0;">${rarityStr}</span>
             </div>
             <img src="${flower.photo}" alt="${escapeHtml(titleCase(flower.common))}" class="hud-modal-img">
             <div class="hud-modal-content">
-              <h2 style="margin:0 0 2px;">${escapeHtml(titleCase(flower.common))}</h2>
-              <i style="color:var(--muted); font-size:13px;">${escapeHtml(flower.scientific)}</i>
-              <div class="rarity-line rarity-${rarityClass}">RARITY: ${rarityStr}</div>
-
-              <div class="hud-modal-fields">
-                <div class="hud-row"><span class="lbl">FAMILY</span><span class="val">${escapeHtml(flower.family || '—')}</span></div>
-                <div class="hud-row"><span class="lbl">BIOME</span><span class="val">${escapeHtml((flower.biome || 'UNKNOWN').toUpperCase())}</span></div>
-                <div class="hud-row"><span class="lbl">REGION</span><span class="val dim">${escapeHtml(flower.region || '—')}</span></div>
-                <div class="hud-row"><span class="lbl">EDIBLE</span><span class="val">${edibleStr}</span></div>
-                <div class="hud-row"><span class="lbl">TOXIC</span><span class="val">${toxicStr}</span></div>
-                <div class="hud-row"><span class="lbl">ORIGIN</span><span class="val">${nativeStr}</span></div>
-                <div class="hud-row"><span class="lbl">SCAN_TS</span><span class="val">${tsStr}</span></div>
-                <div class="hud-row"><span class="lbl">GPS</span><span class="val">${gpsStr}</span></div>
-              </div>
-
-              <div class="hud-section-header">// FIELD NOTES</div>
-              <p style="font-family:var(--mono); font-size:12px; line-height:1.6; color:#ddd; margin:8px 0;">${escapeHtml(flower.tidbit)}</p>
+              <h2 style="margin:0 0 2px; font-size:18px;">${escapeHtml(titleCase(flower.common))}</h2>
+              <i style="color:var(--muted); font-size:12px;">${escapeHtml(flower.scientific)}</i>
+              <div class="mini-tag-row">${tags.join('')}</div>
+              <p style="font-size:13px; line-height:1.5; color:#ddd; margin:10px 0;">${escapeHtml(flower.tidbit)}</p>
+              <div class="compact-meta">Scanned ${tsStr}${flower.region ? ' · ' + escapeHtml(flower.region) : ''}</div>
+              ${mapBtn}
             </div>
-
-            <button onclick="hideModal()" class="hud-close-btn">CLOSE [×]</button>
+            <button onclick="hideModal()" class="hud-close-btn">CLOSE</button>
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', modalHTML);
       document.querySelector('.modal').style.display = 'flex';
+    }
+
+    /* ───────────────────────────────────────────────
+       FOUND vs BIOME MAP — overlay showing user's scan
+       location alongside the typical biome regions.
+    ─────────────────────────────────────────────── */
+    function showFoundVsBiomeMap(flowerId) {
+      const flower = flowers.find(f => f.id === flowerId);
+      if (!flower || !flower.location || !flower.biome) return;
+
+      const { W, H, path, cities } = CA_MAP;
+      const scanPos = projectCA(flower.location.lat, flower.location.lng);
+      const inCA = scanPos.x >= 0 && scanPos.x <= W && scanPos.y >= 0 && scanPos.y <= H;
+
+      // Highlight rectangles for biome regions
+      const matching = CALIFORNIA_BIOME_MAP.filter(r => r.biome === flower.biome);
+      const highlights = matching.map(r => {
+        const tl = projectCA(r.maxLat, r.minLng);
+        const br = projectCA(r.minLat, r.maxLng);
+        return `<rect x="${tl.x.toFixed(1)}" y="${tl.y.toFixed(1)}" width="${(br.x - tl.x).toFixed(1)}" height="${(br.y - tl.y).toFixed(1)}" fill="var(--green)" opacity="0.45" rx="2"/>`;
+      }).join('');
+
+      // City pins for orientation
+      const cityPins = cities.map(c => {
+        const p = projectCA(c.lat, c.lng);
+        return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="1.5" fill="#666"/>
+                <text x="${(p.x + 3).toFixed(1)}" y="${(p.y + 2).toFixed(1)}" fill="#888" font-size="5.5" font-family="system-ui">${escapeHtml(c.name)}</text>`;
+      }).join('');
+
+      // User's scan pin (only if it's in California bounds)
+      const scanPin = inCA ? `
+        <g transform="translate(${scanPos.x.toFixed(1)} ${scanPos.y.toFixed(1)})">
+          <circle r="9" fill="#fbbf24" opacity="0.25">
+            <animate attributeName="r" from="6" to="14" dur="1.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from="0.6" to="0" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle r="4" fill="#fbbf24" stroke="#fff" stroke-width="1.5"/>
+        </g>` : '';
+
+      const outOfStateNote = !inCA
+        ? `<div style="background:#3d2a0a; border:1px solid #fbbf24; color:#fbbf24; padding:8px 12px; border-radius:6px; font-size:12px; margin-top:10px;">⚠ Scan location is outside California — map can't pin it.</div>`
+        : '';
+
+      const modalHTML = `
+        <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
+          <div class="modal-content hud-modal" onclick="event.stopImmediatePropagation()" style="max-width:340px;">
+            <div class="hud-modal-top">
+              <span class="hud-modal-id">// LOCATION</span>
+              <span class="hud-modal-id" style="color:var(--green);">${escapeHtml(titleCase(flower.common))}</span>
+            </div>
+            <div style="padding:14px;">
+              <div class="map-legend">
+                <span><span class="legend-dot" style="background:var(--green);"></span> Typical biome (${escapeHtml(flower.biome)})</span>
+                <span><span class="legend-dot" style="background:#fbbf24;"></span> Where you found it</span>
+              </div>
+              <svg viewBox="0 0 ${W} ${H}" class="found-vs-biome-map" xmlns="http://www.w3.org/2000/svg">
+                <defs><clipPath id="ca-clip-fb"><path d="${path}"/></clipPath></defs>
+                <path d="${path}" fill="#0a2218" stroke="#1f5d3a" stroke-width="1.2"/>
+                <g clip-path="url(#ca-clip-fb)">${highlights}</g>
+                <path d="${path}" fill="none" stroke="var(--green)" stroke-width="1" opacity="0.65"/>
+                ${cityPins}
+                ${scanPin}
+              </svg>
+              ${outOfStateNote}
+            </div>
+            <button onclick="hideModal()" class="hud-close-btn">CLOSE</button>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const modals = document.querySelectorAll('.modal');
+      modals[modals.length - 1].style.display = 'flex';
+      modals[modals.length - 1].style.zIndex = '1200';
     }
 
     function hideModal() {
@@ -1098,35 +1194,40 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const pane = document.getElementById('hub-pane');
       if (!pane) return;
 
-      // Compute progress totals for the category cards
       const biomeCounts  = getMasterCounts('bio');
       const familyCounts = getMasterCounts('fam');
+
+      const renderRow = (field, name, count) => {
+        const pct = Math.round((count.found / count.total) * 100);
+        const complete = count.found === count.total;
+        return `
+          <div class="log-row ${complete ? 'complete' : ''}" onclick="showLogDetail('${field}', '${escapeAttr(name)}')">
+            <div class="log-row-head">
+              <span class="name">${escapeHtml(name)} ${complete ? '✓' : ''}</span>
+              <span class="count">${count.found} / ${count.total} (${pct}%)</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>`;
+      };
+
+      const biomeRows = Object.entries(biomeCounts)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([name, c]) => renderRow('bio', name, c)).join('');
+
+      const familyRows = Object.entries(familyCounts)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([name, c]) => renderRow('fam', name, c)).join('');
 
       const totalBiomeFound  = Object.values(biomeCounts).reduce((s, c) => s + c.found, 0);
       const totalBiomeTotal  = Object.values(biomeCounts).reduce((s, c) => s + c.total, 0);
       const totalFamFound    = Object.values(familyCounts).reduce((s, c) => s + c.found, 0);
       const totalFamTotal    = Object.values(familyCounts).reduce((s, c) => s + c.total, 0);
 
-      const card = (icon, name, found, total, onClick) => {
-        const pct = total > 0 ? Math.round((found / total) * 100) : 0;
-        const complete = found === total && total > 0;
-        return `
-          <div class="cat-card ${complete ? 'complete' : ''}" onclick="${onClick}">
-            <div>
-              <div class="cat-icon">${icon}</div>
-              <div class="cat-name">${name} ${complete ? '✓' : ''}</div>
-              <div class="cat-count">${found} / ${total} (${pct}%)</div>
-            </div>
-            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
-          </div>`;
-      };
-
       pane.innerHTML = `
-        <p style="padding:14px 20px 0; color:#aaa; font-size:13px; margin:0;">Progress against the California master list (300 species)</p>
-        <div class="cat-grid">
-          ${card('🌐', 'By Biome',  totalBiomeFound, totalBiomeTotal, "openLogDrillDown('bio')")}
-          ${card('🧬', 'By Family', totalFamFound,   totalFamTotal,   "openLogDrillDown('fam')")}
-        </div>`;
+        <div class="flat-section-header">🌐 BY BIOME <span class="flat-section-count">${totalBiomeFound} / ${totalBiomeTotal}</span></div>
+        ${biomeRows}
+        <div class="flat-section-header">🧬 BY FAMILY <span class="flat-section-count">${totalFamFound} / ${totalFamTotal}</span></div>
+        ${familyRows}`;
     }
 
     function openLogDrillDown(field) {
@@ -1470,35 +1571,28 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const pane = document.getElementById('hub-pane');
       if (!pane) return;
 
-      // Compute unlocked counts per section
       const unlockedSet = new Set(await db.getItem('unlocked') || []);
-      const sectionStats = {};
-      ACHIEVEMENTS.forEach(a => {
-        if (!sectionStats[a.section]) sectionStats[a.section] = { total: 0, unlocked: 0 };
-        sectionStats[a.section].total++;
-        if (a.check(flowers) || unlockedSet.has(a.id)) sectionStats[a.section].unlocked++;
+      const sectionOrder = ['collection', 'botany', 'region', 'mastery'];
+
+      let html = '';
+      sectionOrder.forEach(sectionKey => {
+        const items = ACHIEVEMENTS.filter(a => a.section === sectionKey);
+        if (items.length === 0) return;
+        const meta = ACH_SECTION_META[sectionKey] || { label: sectionKey, icon: '🏅' };
+        const unlockedCount = items.filter(a => a.check(flowers) || unlockedSet.has(a.id)).length;
+        html += `<div class="flat-section-header">${meta.icon} ${meta.label.toUpperCase()} <span class="flat-section-count">${unlockedCount} / ${items.length}</span></div>`;
+        items.forEach(a => {
+          const isUnlocked = a.check(flowers) || unlockedSet.has(a.id);
+          html += `
+            <div id="ach-${a.id}" class="ach-item ${isUnlocked ? 'unlocked' : ''}">
+              <span style="font-size:26px;">${a.icon || '🏅'}</span>
+              <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
+              <span class="ach-check">${isUnlocked ? '✅' : ''}</span>
+            </div>`;
+        });
       });
 
-      const sectionOrder = ['collection', 'botany', 'region', 'mastery'];
-      const cards = sectionOrder.filter(s => sectionStats[s]).map(s => {
-        const meta = ACH_SECTION_META[s] || { label: s, icon: '🏅' };
-        const stat = sectionStats[s];
-        const pct = stat.total > 0 ? Math.round((stat.unlocked / stat.total) * 100) : 0;
-        const complete = stat.unlocked === stat.total && stat.total > 0;
-        return `
-          <div class="cat-card ${complete ? 'complete' : ''}" onclick="openAchievementSection('${s}')">
-            <div>
-              <div class="cat-icon">${meta.icon}</div>
-              <div class="cat-name">${meta.label} ${complete ? '✓' : ''}</div>
-              <div class="cat-count">${stat.unlocked} / ${stat.total} unlocked</div>
-            </div>
-            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
-          </div>`;
-      }).join('');
-
-      pane.innerHTML = `
-        <p style="padding:14px 20px 0; color:#aaa; font-size:13px; margin:0;">Tap a category to see what's inside</p>
-        <div class="cat-grid">${cards}</div>`;
+      pane.innerHTML = html;
     }
 
     function openAchievementSection(section) {
@@ -1910,6 +2004,7 @@ ${summary}`;
 
     function updateProfileButton() {
       const slot = document.getElementById('profile-btn-avatar');
+      const nameEl = document.getElementById('profile-btn-name');
       if (!slot) return;
       const p = getProfile();
       if (p.avatarUrl) {
@@ -1917,6 +2012,12 @@ ${summary}`;
       } else {
         const av = DEFAULT_AVATARS.find(a => a.id === p.avatarId) || DEFAULT_AVATARS[0];
         slot.innerHTML = av.svg;
+      }
+      if (nameEl) {
+        const name = (p.name || 'Naturalist').trim();
+        nameEl.textContent = name;
+        const color = NAME_COLORS.find(c => c.id === p.colorId) || NAME_COLORS[0];
+        nameEl.style.color = color.hex;
       }
     }
 
@@ -1988,36 +2089,40 @@ ${summary}`;
           const f = flowerId ? flowers.find(x => x.id === flowerId) : null;
           if (f) {
             return `
-              <div class="pick-slot filled" onclick="pickTopFlower(${i})">
+              <div class="pick-row filled">
                 <span class="slot-label">#${i+1}</span>
                 <img src="${f.photo}" class="slot-thumb">
                 <span class="slot-name">${escapeHtml(titleCase(f.common))}</span>
-                <span class="slot-clear" onclick="event.stopPropagation(); clearTopFlower(${i})">×</span>
+                <button class="assign-btn" onclick="pickTopFlower(${i})">CHANGE</button>
+                <button class="assign-btn clear" onclick="clearTopFlower(${i})">×</button>
               </div>`;
           }
           return `
-            <div class="pick-slot" onclick="pickTopFlower(${i})">
+            <div class="pick-row">
               <span class="slot-label">#${i+1}</span>
-              <span class="slot-empty">Tap to assign…</span>
+              <span class="slot-empty">Empty slot</span>
+              <button class="assign-btn" onclick="pickTopFlower(${i})">ASSIGN</button>
             </div>`;
         }).join('');
       }
 
-      // Top achievement slot
+      // Top achievement slot — same button-driven pattern
       const topAchEl = document.getElementById('top-ach-slot');
       if (topAchEl) {
         const ach = p.topAch ? ACHIEVEMENTS.find(a => a.id === p.topAch) : null;
         if (ach) {
           topAchEl.innerHTML = `
-            <div class="pick-slot filled" onclick="pickTopAchievement()">
-              <span style="font-size:24px;">${ach.icon}</span>
+            <div class="pick-row filled">
+              <span class="slot-icon">${ach.icon}</span>
               <span class="slot-name">${escapeHtml(ach.name)}</span>
-              <span class="slot-clear" onclick="event.stopPropagation(); clearTopAchievement()">×</span>
+              <button class="assign-btn" onclick="pickTopAchievement()">CHANGE</button>
+              <button class="assign-btn clear" onclick="clearTopAchievement()">×</button>
             </div>`;
         } else {
           topAchEl.innerHTML = `
-            <div class="pick-slot" onclick="pickTopAchievement()">
-              <span class="slot-empty">Tap to choose from your unlocked achievements…</span>
+            <div class="pick-row">
+              <span class="slot-empty">No achievement featured</span>
+              <button class="assign-btn" onclick="pickTopAchievement()">ASSIGN</button>
             </div>`;
         }
       }
@@ -2456,7 +2561,8 @@ ${summary}`;
   </div>
 
   <button class="profile-btn" onclick="openProfile()" aria-label="Profile" id="profile-btn">
-    <span id="profile-btn-avatar"></span>
+    <span id="profile-btn-avatar" class="profile-btn-avatar"></span>
+    <span id="profile-btn-name" class="profile-btn-name"></span>
   </button>
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
 
@@ -2575,12 +2681,12 @@ ${summary}`;
         Nothing is ever sent to GitHub or any server.
       </div>
     </div>
-    <div id="scan-active" style="display:none; padding:20px; text-align:center; min-height:100vh; flex-direction:column;">
-      <h1 style="color:var(--green); margin:0 0 10px;">🌸 FlowerDex</h1>
-      <p style="margin:0 0 10px; color:#cfe;">Frame the flower and tap capture</p>
-      <video id="preview" style="width:100%; max-height:420px; background:#000; border-radius:16px; margin:10px 0;" playsinline muted></video>
-      <button onclick="capturePhoto()">📸 CAPTURE PHOTO</button>
-      <button onclick="cancelScan()" style="background:transparent; color:#aaa; border:1px solid #444;">Cancel</button>
+    <div id="scan-active" style="display:none; position:relative; min-height:100vh; flex-direction:column;">
+      <button onclick="cancelScan()" class="scan-close-btn" aria-label="Close camera">×</button>
+      <video id="preview" class="scan-preview" playsinline muted></video>
+      <button onclick="capturePhoto()" class="capture-round-btn" aria-label="Capture photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
     </div>
   </div>
 
