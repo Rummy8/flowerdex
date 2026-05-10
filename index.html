@@ -80,11 +80,15 @@
     /* Auto-camera toggle — bare row: just camera icon + switch, no label, no bubble */
     .auto-cam-row { display:flex; align-items:center; gap:10px; margin-top:24px; justify-content:center; color:var(--muted); }
 
+    /* Floating auto-cam toggle (top-right under gear, Scan tab only) */
+    .auto-cam-floating { position:fixed; top:62px; right:14px; z-index:900; display:none; align-items:center; gap:8px; color:var(--muted); padding:6px 10px; background:rgba(15,61,42,0.92); border:1px solid #1f5d3a; border-radius:9999px; }
+    body.on-scan-tab .auto-cam-floating { display:flex; }
+
     /* Active scan screen — full-bleed video + round capture button */
     .scan-preview { width:100%; height:calc(100vh - 50px); object-fit:cover; background:#000; display:block; }
     .scan-close-btn { position:absolute; top:14px; right:14px; width:38px; height:38px; padding:0; margin:0; background:rgba(0,0,0,0.55); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:50%; font-size:24px; line-height:1; z-index:5; }
     .scan-close-btn:active { background:rgba(0,0,0,0.85); }
-    .capture-round-btn { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:78px; height:78px; padding:0; margin:0; background:var(--green); color:var(--dark); border:4px solid #fff; border-radius:50%; box-shadow: 0 0 24px rgba(74,222,128,0.6); display:flex; align-items:center; justify-content:center; z-index:5; }
+    .capture-round-btn { position:absolute; bottom:80px; left:50%; transform:translateX(-50%); width:78px; height:78px; padding:0; margin:0; background:var(--green); color:var(--dark); border:4px solid #fff; border-radius:50%; box-shadow: 0 0 24px rgba(74,222,128,0.6); display:flex; align-items:center; justify-content:center; z-index:5; }
     .capture-round-btn:active { transform:translateX(-50%) scale(0.93); }
     .switch { position:relative; display:inline-block; width:42px; height:24px; }
     .switch input { opacity:0; width:0; height:0; }
@@ -189,7 +193,7 @@
     .progress-fill { height:100%; background:var(--green); transition: width 0.5s; border-radius:9999px; }
 
     /* Back button (inside drill-down views) */
-    .back-btn { background:transparent; color:var(--green); border:1px solid var(--green); width:auto; padding:8px 16px; margin:14px 14px 0; border-radius:9999px; font-size:14px; cursor:pointer; }
+    .back-btn { background:transparent; color:var(--green); border:1px solid var(--green); width:auto; padding:8px 16px; margin:64px 14px 0; border-radius:9999px; font-size:14px; cursor:pointer; }
 
     /* Species list (inside log detail modal) */
     .species-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #1a3d2a; text-align:left; cursor:pointer; transition: background 0.15s; gap:12px; }
@@ -434,7 +438,7 @@
     .chat-send { width:auto; padding:10px 20px; margin:0; flex-shrink:0; }
 
     /* Achievements/Logs hub cards (entry view of tab 2) — vertical stack, large */
-    .hub-cards { display:flex; flex-direction:column; gap:14px; padding:20px; }
+    .hub-cards { display:flex; flex-direction:column; gap:14px; padding:70px 20px 20px; }
     .hub-card-btn { background:var(--panel); border:2px solid #1f5d3a; border-radius:14px; padding:22px 20px; cursor:pointer; transition: border-color 0.2s, transform 0.1s; display:flex; flex-direction:column; gap:8px; }
     .hub-card-btn:active { transform:scale(0.98); border-color:var(--green); }
     .hub-card-btn .hub-card-icon { font-size:42px; line-height:1; }
@@ -1908,19 +1912,28 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       startCamera();
     }
 
+    /** Auto-camera defaults to ON unless the user has explicitly disabled it. */
+    function isAutoCamEnabled() {
+      return localStorage.getItem('flowerdex_auto_cam') !== '0';
+    }
+
     function toggleAutoCam(enabled) {
       localStorage.setItem('flowerdex_auto_cam', enabled ? '1' : '0');
+      // Sync both checkboxes (idle screen + top-right) if both exist
+      document.querySelectorAll('.auto-cam-checkbox').forEach(cb => { cb.checked = enabled; });
       // If toggled ON while already on the scan tab, kick off the camera now.
       const onScanTab = document.getElementById('tab1')?.classList.contains('active');
       const idle = document.getElementById('scan-idle');
       const isIdle = idle && idle.style.display !== 'none';
       if (enabled && onScanTab && isIdle) beginScan();
+      // If toggled OFF while in the camera, gracefully fall back to idle
+      if (!enabled && onScanTab && !isIdle) cancelScan();
     }
 
     function initAutoCam() {
-      const checkbox = document.getElementById('auto-cam-checkbox');
-      if (!checkbox) return;
-      checkbox.checked = localStorage.getItem('flowerdex_auto_cam') === '1';
+      // Sync any auto-cam checkboxes on the page to current state
+      const enabled = isAutoCamEnabled();
+      document.querySelectorAll('.auto-cam-checkbox').forEach(cb => { cb.checked = enabled; });
     }
 
     function cancelScan() {
@@ -2427,6 +2440,8 @@ ${summary}`;
       document.getElementById('tab'+n).classList.add('active');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-btn')[n].classList.add('active');
+      // Toggle body flag so the auto-cam toggle only shows on Scan tab
+      document.body.classList.toggle('on-scan-tab', n === 1);
       // Tab 0 = Dex/Collection, 1 = Scan, 2 = Achievements
       if (n === 0) loadFlowers();
       if (n === 1) {
@@ -2434,7 +2449,7 @@ ${summary}`;
         // back on the idle screen (not mid-scan)
         const idle = document.getElementById('scan-idle');
         const isIdle = idle && idle.style.display !== 'none';
-        if (isIdle && localStorage.getItem('flowerdex_auto_cam') === '1') {
+        if (isIdle && isAutoCamEnabled()) {
           beginScan();
         }
       }
@@ -2501,7 +2516,7 @@ ${summary}`;
       initProfile();
       // If auto-cam is enabled, kick the camera AFTER the splash dismisses
       // so the camera permission prompt isn't competing with the intro animation.
-      if (localStorage.getItem('flowerdex_auto_cam') === '1') {
+      if (isAutoCamEnabled()) {
         setTimeout(() => {
           const idle = document.getElementById('scan-idle');
           const onScanTab = document.getElementById('tab1')?.classList.contains('active');
@@ -2511,7 +2526,7 @@ ${summary}`;
     };
   </script>
 </head>
-<body class="splash-active">
+<body class="splash-active on-scan-tab">
 
   <!-- Splash screen — plays once per session -->
   <div id="splash" class="splash">
@@ -2580,6 +2595,12 @@ ${summary}`;
     <span id="profile-btn-name" class="profile-btn-name"></span>
   </button>
   <button class="gear-btn" onclick="openSettings()" aria-label="Settings">⚙️</button>
+
+  <!-- Auto-camera toggle (top-right, under gear) — only visible on Scan tab -->
+  <div class="auto-cam-floating" id="auto-cam-floating">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <span class="switch"><input type="checkbox" class="auto-cam-checkbox" onchange="toggleAutoCam(this.checked)"><span class="slider"></span></span>
+  </div>
 
   <!-- Profile modal -->
   <div id="profile-modal" class="profile-modal" onclick="if(event.target.id==='profile-modal')closeProfile()">
@@ -2671,24 +2692,16 @@ ${summary}`;
 
   <!-- TAB 0: Dex (Collection) -->
   <div id="tab0" class="tab">
-    <h2 style="padding:20px; color:var(--green);">Your Collection</h2>
+    <h2 style="padding:70px 20px 0; color:var(--green); margin:0 0 8px;">Your Collection</h2>
     <div id="collection"></div>
   </div>
 
   <!-- TAB 1: Scanner (default active, middle tab) -->
   <div id="tab1" class="tab active">
     <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <div style="text-align:center;">
-        <button onclick="beginScan()" class="capture-round-btn" style="position:static; transform:none; margin:0 auto;" aria-label="Open camera">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </button>
-
-        <!-- Auto-camera toggle: just an icon + switch, no label, no bubble -->
-        <div class="auto-cam-row">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span class="switch"><input type="checkbox" id="auto-cam-checkbox" onchange="toggleAutoCam(this.checked)"><span class="slider"></span></span>
-        </div>
-      </div>
+      <button onclick="beginScan()" class="capture-round-btn" style="position:static; transform:none; margin:0 auto;" aria-label="Open camera">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
       <div class="privacy" style="position:absolute; bottom:60px; left:0; right:0;">
         🔒 Photos &amp; data stay 100% on your phone only.
       </div>
