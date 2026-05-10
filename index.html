@@ -77,9 +77,8 @@
     button { background:var(--green); color:var(--dark); border:none; padding:15px; border-radius:9999px; font-weight:bold; width:90%; margin:20px auto; display:block; cursor:pointer; }
     .privacy { font-size:12px; color:#aaa; text-align:center; padding:10px; background:var(--panel-deep); }
 
-    /* Auto-camera toggle */
-    .auto-cam-toggle { display:inline-flex; align-items:center; gap:10px; margin-top:18px; color:#cfe; font-size:14px; cursor:pointer; user-select:none; }
-    .auto-cam-toggle svg { color:var(--muted); }
+    /* Auto-camera toggle — bare row: just camera icon + switch, no label, no bubble */
+    .auto-cam-row { display:flex; align-items:center; gap:10px; margin-top:24px; justify-content:center; color:var(--muted); }
 
     /* Active scan screen — full-bleed video + round capture button */
     .scan-preview { width:100%; height:calc(100vh - 50px); object-fit:cover; background:#000; display:block; }
@@ -232,11 +231,11 @@
     .gear-btn { position:fixed; top:12px; right:12px; background:rgba(15,61,42,0.92); color:var(--green); border:1px solid var(--green); width:42px; height:42px; padding:0; margin:0; border-radius:50%; font-size:20px; z-index:900; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 
     /* Profile button (top-left) — pill with avatar + colored name */
-    .profile-btn { position:fixed; top:12px; left:12px; background:rgba(15,61,42,0.92); border:1px solid var(--green); padding:3px 12px 3px 3px; margin:0; height:42px; border-radius:9999px; z-index:900; cursor:pointer; display:flex; align-items:center; gap:8px; max-width:60vw; }
+    .profile-btn { position:fixed; top:12px; left:12px; background:rgba(15,61,42,0.92); border:1px solid var(--green); padding:3px 14px 3px 3px; margin:0; height:42px; border-radius:9999px; z-index:900; cursor:pointer; display:inline-flex; align-items:center; gap:8px; width:auto; max-width:calc(100vw - 70px); }
     .profile-btn-avatar { width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#0a2218; color:var(--green); }
     .profile-btn-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
     .profile-btn-avatar svg { width:22px; height:22px; }
-    .profile-btn-name { color:var(--green); font-weight:bold; font-size:14px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .profile-btn-name { color:var(--green); font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
     /* Profile modal */
     .profile-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.9); z-index:1100; align-items:center; justify-content:center; padding:20px; }
@@ -434,16 +433,13 @@
     .chat-input-row input { flex:1; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:9999px; padding:12px 16px; font-size:16px; outline:none; }
     .chat-send { width:auto; padding:10px 20px; margin:0; flex-shrink:0; }
 
-    /* Achievements/Logs hub cards (top of tab 2) — bigger cards w/ progress bars */
-    .hub-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
-    .hub-card-btn { background:var(--panel); border:2px solid #1f5d3a; border-radius:12px; padding:14px 12px; cursor:pointer; transition: border-color 0.2s, transform 0.1s; display:flex; flex-direction:column; gap:6px; }
-    .hub-card-btn:active { transform:scale(0.97); }
-    .hub-card-btn.active { border-color: var(--green); background:#0a3d1f; box-shadow: 0 0 16px rgba(74,222,128,0.25); }
-    .hub-card-btn .hub-card-icon { font-size:28px; line-height:1; }
-    .hub-card-btn .hub-card-name { font-weight:bold; font-size:16px; color:white; }
-    .hub-card-btn.active .hub-card-name { color:var(--green); }
-    .hub-card-btn .hub-card-count { color:#aaa; font-size:11px; font-family:var(--mono); letter-spacing:0.5px; }
-    .hub-card-btn.active .hub-card-count { color:var(--muted); }
+    /* Achievements/Logs hub cards (entry view of tab 2) — vertical stack, large */
+    .hub-cards { display:flex; flex-direction:column; gap:14px; padding:20px; }
+    .hub-card-btn { background:var(--panel); border:2px solid #1f5d3a; border-radius:14px; padding:22px 20px; cursor:pointer; transition: border-color 0.2s, transform 0.1s; display:flex; flex-direction:column; gap:8px; }
+    .hub-card-btn:active { transform:scale(0.98); border-color:var(--green); }
+    .hub-card-btn .hub-card-icon { font-size:42px; line-height:1; }
+    .hub-card-btn .hub-card-name { font-weight:bold; font-size:22px; color:white; }
+    .hub-card-btn .hub-card-count { color:#aaa; font-size:13px; font-family:var(--mono); letter-spacing:0.5px; }
 
     /* Settings action button (e.g. Open Botanist AI link) */
     .settings-action-btn { width:100%; margin:0 0 16px; padding:12px 14px; background:var(--panel-deep); color:white; border:1px solid #2d5a3a; border-radius:10px; display:flex; align-items:center; gap:12px; font-size:15px; font-weight:600; cursor:pointer; }
@@ -1514,16 +1510,33 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
 
     /* ───────────────────────────────────────────────
        ACHIEVEMENTS HUB — top-level wrapper for tab 2
-       Contains two sub-tabs: Achievements (default) | Logs
-       activeAchHubPane is the persistent preference within a session.
+       Two cards (Achievements/Logs) as entry view; tap to drill into a list.
     ─────────────────────────────────────────────── */
-    let activeAchHubPane = 'ach'; // 'ach' | 'logs'
+    /* When null, the hub shows only the two cards (entry view).
+       Set to 'ach' or 'logs' to drill into a list with a back button. */
+    let activeAchHubPane = null;
 
     async function renderAchievementsHub() {
       const tab = document.getElementById('tab2');
       if (!tab) return;
 
-      // Compute progress for both sections so the cards can show real numbers
+      // Drilled-down view: show back button + the chosen pane
+      if (activeAchHubPane === 'ach') {
+        tab.innerHTML = `
+          <button class="back-btn" onclick="exitAchHubPane()">← Achievements</button>
+          <div id="hub-pane"></div>`;
+        renderAchievements();
+        return;
+      }
+      if (activeAchHubPane === 'logs') {
+        tab.innerHTML = `
+          <button class="back-btn" onclick="exitAchHubPane()">← Achievements</button>
+          <div id="hub-pane"></div>`;
+        renderLogs();
+        return;
+      }
+
+      // Default entry view: just the two big cards
       const unlockedSet = new Set(await db.getItem('unlocked') || []);
       let achTotal = 0, achUnlocked = 0;
       ACHIEVEMENTS.forEach(a => {
@@ -1539,32 +1552,34 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
 
       tab.innerHTML = `
         <div class="hub-cards">
-          <div class="hub-card-btn ${activeAchHubPane === 'ach' ? 'active' : ''}" onclick="switchAchHub('ach')">
+          <div class="hub-card-btn" onclick="enterAchHubPane('ach')">
             <div class="hub-card-icon">🏆</div>
             <div class="hub-card-name">Achievements</div>
             <div class="hub-card-count">${achUnlocked} / ${achTotal} unlocked · ${achPct}%</div>
             <div class="progress-bar"><div class="progress-fill" style="width:${achPct}%;"></div></div>
           </div>
-          <div class="hub-card-btn ${activeAchHubPane === 'logs' ? 'active' : ''}" onclick="switchAchHub('logs')">
+          <div class="hub-card-btn" onclick="enterAchHubPane('logs')">
             <div class="hub-card-icon">📖</div>
             <div class="hub-card-name">Logs</div>
             <div class="hub-card-count">${totalLogFound} / ${totalLogTotal} cataloged · ${logPct}%</div>
             <div class="progress-bar"><div class="progress-fill" style="width:${logPct}%;"></div></div>
           </div>
-        </div>
-        <div id="hub-pane"></div>`;
-
-      // Populate the active pane
-      if (activeAchHubPane === 'ach') {
-        renderAchievements();
-      } else {
-        renderLogs();
-      }
+        </div>`;
     }
 
-    function switchAchHub(pane) {
+    function enterAchHubPane(pane) {
       activeAchHubPane = pane;
       renderAchievementsHub();
+    }
+
+    function exitAchHubPane() {
+      activeAchHubPane = null;
+      renderAchievementsHub();
+    }
+
+    // Kept for compat — if anything still calls switchAchHub, it routes correctly
+    function switchAchHub(pane) {
+      enterAchHubPane(pane);
     }
 
     async function renderAchievements() {
@@ -2423,7 +2438,7 @@ ${summary}`;
           beginScan();
         }
       }
-      if (n === 2) renderAchievementsHub();
+      if (n === 2) { activeAchHubPane = null; renderAchievementsHub(); }
       // Stop the camera stream if user navigates away from Scan
       if (n !== 1 && currentStream) cancelScan();
     }
@@ -2662,23 +2677,20 @@ ${summary}`;
 
   <!-- TAB 1: Scanner (default active, middle tab) -->
   <div id="tab1" class="tab active">
-    <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column;">
-      <div style="margin-top:40px;">
-        <div style="font-size:72px; line-height:1;">🌸</div>
-        <h1 style="color:var(--green); margin:12px 0 4px;">FlowerDex</h1>
-        <p style="color:#cfe; max-width:280px; margin:0 auto 24px;">Point your camera at any flower — AI identifies it for your collection.</p>
-        <button onclick="beginScan()">📸 Start Scan</button>
+    <div id="scan-idle" style="padding:20px; text-align:center; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <div style="text-align:center;">
+        <button onclick="beginScan()" class="capture-round-btn" style="position:static; transform:none; margin:0 auto;" aria-label="Open camera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
 
-        <!-- Auto-camera toggle -->
-        <label class="auto-cam-toggle">
+        <!-- Auto-camera toggle: just an icon + switch, no label, no bubble -->
+        <div class="auto-cam-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span>Auto-open camera</span>
           <span class="switch"><input type="checkbox" id="auto-cam-checkbox" onchange="toggleAutoCam(this.checked)"><span class="slider"></span></span>
-        </label>
+        </div>
       </div>
-      <div class="privacy" style="margin-top:auto;">
-        🔒 Photos &amp; data stay 100% on your phone only.<br>
-        Nothing is ever sent to GitHub or any server.
+      <div class="privacy" style="position:absolute; bottom:60px; left:0; right:0;">
+        🔒 Photos &amp; data stay 100% on your phone only.
       </div>
     </div>
     <div id="scan-active" style="display:none; position:relative; min-height:100vh; flex-direction:column;">
