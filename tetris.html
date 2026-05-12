@@ -32,7 +32,8 @@
       font-family: 'Quicksand', system-ui, -apple-system, sans-serif;
       color: var(--ink);
       background: var(--bg);
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       -webkit-user-select: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -52,29 +53,29 @@
       position: relative; z-index: 1;
       display: flex; flex-direction: column;
       align-items: center;
-      min-height: 100vh; padding: 8px 8px 0;
+      min-height: 100%; padding: 4px 8px 12px;
     }
 
-    .header { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
-    .title { font-size: 22px; font-weight: 700; color: var(--accent-deep); letter-spacing: 1px; margin: 0; }
-    .title-flower { font-size: 18px; vertical-align: -2px; }
-    .subtitle { font-size: 11px; color: var(--soft); margin: 0; letter-spacing: 1.5px; text-transform: uppercase; }
+    .header { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
+    .title { font-size: 18px; font-weight: 700; color: var(--accent-deep); letter-spacing: 1px; margin: 0; }
+    .title-flower { font-size: 16px; vertical-align: -2px; }
+    .subtitle { font-size: 9px; color: var(--soft); margin: 0; letter-spacing: 1.5px; text-transform: uppercase; }
 
     .top-bar {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+      gap: 5px;
       width: 100%;
-      max-width: 360px;
-      margin: 8px 0;
+      max-width: 320px;
+      margin: 5px 0;
     }
-    .stat { background: white; border-radius: 12px; padding: 6px 8px; text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,0.04); }
-    .stat-label { font-size: 9px; color: var(--soft); letter-spacing: 1.5px; text-transform: uppercase; }
-    .stat-value { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+    .stat { background: white; border-radius: 10px; padding: 4px 6px; text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,0.04); }
+    .stat-label { font-size: 8px; color: var(--soft); letter-spacing: 1.5px; text-transform: uppercase; }
+    .stat-value { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.1; }
 
     .game-row {
-      display: flex; gap: 10px; align-items: flex-start;
-      max-width: 360px; width: 100%;
+      display: flex; gap: 8px; align-items: flex-start;
+      max-width: 320px; width: 100%;
     }
     #board-canvas {
       background: var(--board-bg);
@@ -84,10 +85,10 @@
       touch-action: none;
     }
     .side {
-      display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 60px;
+      display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 56px;
     }
     .next-box {
-      background: white; border-radius: 10px; padding: 6px;
+      background: white; border-radius: 10px; padding: 5px;
       box-shadow: 0 2px 0 rgba(0,0,0,0.04);
     }
     .next-label { font-size: 9px; color: var(--soft); letter-spacing: 1px; text-align: center; text-transform: uppercase; margin-bottom: 2px; }
@@ -97,18 +98,18 @@
     .controls {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-      max-width: 360px;
+      gap: 6px;
+      max-width: 320px;
       width: 100%;
-      margin-top: 12px;
+      margin-top: 8px;
     }
     .ctrl {
       background: white;
       border: none;
-      border-radius: 14px;
-      padding: 14px 6px;
+      border-radius: 12px;
+      padding: 10px 4px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--ink);
       cursor: pointer;
@@ -122,7 +123,11 @@
       box-shadow: 0 3px 0 var(--accent-deep);
     }
     .ctrl.primary:active { box-shadow: 0 1px 0 var(--accent-deep); }
-    .ctrl-row-bottom { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-top: 8px; max-width: 360px; width: 100%; }
+    .ctrl-row-bottom { display: grid; grid-template-columns: 2fr 1fr; gap: 6px; margin-top: 6px; max-width: 320px; width: 100%; }
+
+    .toggle-pause-msg {
+      color: var(--soft); font-size: 11px; margin-top: 6px; font-style: italic;
+    }
 
     /* Game over overlay */
     .gameover {
@@ -156,10 +161,6 @@
       0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
       100% { transform: translate(var(--dx, 0px), 100vh) rotate(720deg); opacity: 0; }
     }
-
-    .toggle-pause-msg {
-      color: var(--soft); font-size: 12px; margin-top: 10px; font-style: italic;
-    }
   </style>
 </head>
 <body>
@@ -178,7 +179,7 @@
     </div>
 
     <div class="game-row">
-      <canvas id="board-canvas" width="240" height="480"></canvas>
+      <canvas id="board-canvas" width="220" height="440"></canvas>
       <div class="side">
         <div class="next-box">
           <div class="next-label">Next</div>
@@ -216,7 +217,7 @@
        wall-kicks kept simple (single-step lateral nudge).
     ─────────────────────────────────────────────── */
     const COLS = 10, ROWS = 20;
-    const TILE = 24; // canvas pixels per cell
+    const TILE = 22; // canvas pixels per cell
 
     // Tetromino definitions — each is a 4×4 grid of 0/1, indexed by rotation.
     // We define one "spawn" shape and rotate at runtime.
@@ -426,14 +427,13 @@
     }
 
     function drawCell(ctx, x, y, color, size = TILE) {
-      // Soft rounded square with a subtle highlight
+      // Rounded square with dark border + subtle highlight on top
       const padding = 1;
       const r = 4;
       const px = x * size + padding;
       const py = y * size + padding;
       const w = size - padding * 2;
       const h = size - padding * 2;
-      ctx.fillStyle = color;
       ctx.beginPath();
       ctx.moveTo(px + r, py);
       ctx.lineTo(px + w - r, py);
@@ -445,9 +445,14 @@
       ctx.lineTo(px, py + r);
       ctx.quadraticCurveTo(px, py, px + r, py);
       ctx.closePath();
+      ctx.fillStyle = color;
       ctx.fill();
-      // Inner highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      // Dark border — gives tiles more visual prominence
+      ctx.strokeStyle = 'rgba(58, 30, 50, 0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Inner highlight strip on top
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
       ctx.fillRect(px + 3, py + 3, w - 6, 2);
     }
 
@@ -546,6 +551,9 @@
             nctx.lineTo(px, py + radius);
             nctx.quadraticCurveTo(px, py, px + radius, py);
             nctx.fill();
+            nctx.strokeStyle = 'rgba(58, 30, 50, 0.55)';
+            nctx.lineWidth = 1.2;
+            nctx.stroke();
           }
         }
       }
