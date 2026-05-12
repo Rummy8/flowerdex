@@ -242,47 +242,53 @@
     .profile-btn-avatar svg { width:22px; height:22px; }
     .profile-btn-name { color:var(--green); font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-    /* Profile modal */
-    .profile-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.9); z-index:1100; align-items:center; justify-content:center; padding:20px; }
+    /* Profile modal — sketch-style single-screen layout */
+    .profile-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.9); z-index:1100; align-items:center; justify-content:center; padding:16px; }
     .profile-modal.show { display:flex; }
-    .profile-content { background:var(--panel); max-width:480px; width:100%; border-radius:16px; padding:18px; max-height:90vh; overflow-y:auto; box-sizing:border-box; text-align:left; }
-    .profile-content h2 { color:var(--green); margin:0 0 4px; font-size:20px; }
-    .profile-section-title { color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:1.5px; margin:14px 0 6px; padding-top:10px; border-top:1px solid #1a3d2a; }
+    .profile-card { background:var(--panel); width:100%; max-width:420px; border-radius:18px; padding:18px; box-sizing:border-box; box-shadow: 0 0 30px rgba(74,222,128,0.18); border:1px solid #1f5d3a; }
 
-    /* Avatar picker grid — tighter */
-    .avatar-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
-    .avatar-option { aspect-ratio:1/1; background:var(--panel-deep); border:2px solid transparent; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:6px; transition: border-color 0.15s; }
-    .avatar-option.selected { border-color: var(--green); box-shadow:0 0 12px rgba(74,222,128,0.4); }
+    /* Top row: avatar | name | color */
+    .prof-top-row { display:flex; align-items:center; gap:12px; }
+    .prof-avatar { width:56px; height:56px; border-radius:50%; background:var(--panel-deep); border:2px solid var(--green); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; overflow:hidden; color:var(--green); }
+    .prof-avatar svg { width:32px; height:32px; }
+    .prof-avatar img { width:100%; height:100%; object-fit:cover; }
+    .prof-name-wrap { flex:1; min-width:0; }
+    .prof-name { width:100%; background:transparent; border:none; border-bottom:1px solid transparent; color:white; font-size:22px; font-weight:bold; padding:6px 4px; outline:none; box-sizing:border-box; transition: border-color 0.15s; }
+    .prof-name:focus { border-bottom-color:var(--green); }
+    .prof-color-wrap { position:relative; flex-shrink:0; }
+    .prof-color-swatch { width:28px; height:28px; border-radius:50%; border:2px solid #1f5d3a; cursor:pointer; margin:0; padding:0; }
+    .prof-color-popover { display:none; position:absolute; top:36px; right:0; background:var(--panel-deep); border:1px solid var(--green); border-radius:10px; padding:8px; z-index:5; gap:6px; flex-wrap:wrap; width:138px; box-shadow:0 6px 20px rgba(0,0,0,0.5); }
+    .prof-color-popover.show { display:flex; }
+    .prof-color-popover .opt { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+    .prof-color-popover .opt.selected { border-color:white; transform:scale(1.1); }
+
+    /* Middle: 3 achievement orbs + favorite picture */
+    .prof-middle-row { display:flex; gap:14px; margin-top:18px; align-items:stretch; }
+    .prof-orbs { flex:0 0 auto; display:flex; flex-direction:column; gap:8px; }
+    .prof-orb-label { color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:1px; }
+    .prof-orb-row { display:flex; gap:8px; }
+    .prof-orb { width:38px; height:38px; border-radius:50%; background:var(--panel-deep); border:1.5px dashed #1f5d3a; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; transition: border-color 0.15s, transform 0.1s; }
+    .prof-orb:active { transform:scale(0.92); }
+    .prof-orb.filled { border-style:solid; border-color:var(--green); background:#0a3d1f; }
+    .prof-favpic { flex:1; min-height:130px; background:var(--panel-deep); border:1.5px dashed #1f5d3a; border-radius:14px; position:relative; overflow:hidden; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .prof-favpic.filled { border-style:solid; border-color:var(--green); }
+    .prof-favpic img { width:100%; height:100%; object-fit:cover; }
+    .prof-favpic .placeholder { color:#666; font-size:11px; font-style:italic; padding:8px; text-align:center; }
+    .prof-favpic-edit { position:absolute; top:6px; right:6px; width:26px; height:26px; padding:0; margin:0; background:rgba(0,0,0,0.6); color:var(--green); border:1px solid var(--green); border-radius:50%; font-size:14px; line-height:1; z-index:2; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    /* Bottom row */
+    .prof-bottom-row { display:flex; gap:10px; margin-top:18px; align-items:center; }
+    .prof-signin-btn { width:auto; margin:0; padding:8px 16px; background:transparent; color:var(--green); border:1px solid var(--green); border-radius:9999px; font-size:13px; font-weight:bold; cursor:pointer; }
+    .prof-signin-btn.signed-in { color:#fca5a5; border-color:#7f1d1d; }
+    .prof-close-btn { width:auto; margin:0 0 0 auto; padding:8px 18px; background:var(--green); color:var(--dark); border:none; border-radius:9999px; font-weight:bold; cursor:pointer; }
+
+    /* Avatar picker — used by openAvatarPicker, lives in a sub-modal */
+    .avatar-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; }
+    .avatar-option { aspect-ratio:1/1; background:var(--panel-deep); border:2px solid transparent; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; transition: border-color 0.15s; }
+    .avatar-option.selected { border-color:var(--green); box-shadow:0 0 10px rgba(74,222,128,0.4); }
     .avatar-option svg { width:100%; height:100%; color:var(--green); }
     .avatar-option img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
     .avatar-option.upload { color:#aaa; font-size:24px; }
-
-    /* Name + color row — compact */
-    .name-input-row { display:flex; gap:8px; align-items:center; }
-    .name-input-row input { flex:1; background:var(--dark); color:white; border:1px solid #2d5a3a; border-radius:8px; padding:8px 12px; font-size:15px; box-sizing:border-box; }
-    .name-input-row input.preview { font-weight:bold; }
-    .color-swatches { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-    .color-swatch { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition: border-color 0.15s, transform 0.1s; }
-    .color-swatch.selected { border-color:white; transform: scale(1.15); }
-
-    /* Slot rows + Assign/Change buttons (more compact) */
-    .pick-row { background:var(--panel-deep); border:1px solid #1f5d3a; border-radius:8px; padding:8px 10px; margin-bottom:6px; display:flex; align-items:center; gap:10px; min-height:44px; }
-    .pick-row.filled { border-color:var(--green); }
-    .pick-row .slot-label { font-family:var(--mono); font-size:10px; letter-spacing:1px; color:var(--muted); min-width:24px; }
-    .pick-row .slot-name { font-weight:bold; color:white; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; }
-    .pick-row .slot-empty { color:#888; font-style:italic; font-size:13px; flex:1; }
-    .pick-row .slot-thumb { width:32px; height:32px; border-radius:5px; object-fit:cover; flex-shrink:0; }
-    .pick-row .slot-icon { font-size:22px; flex-shrink:0; }
-    .assign-btn { width:auto; margin:0; padding:5px 12px; background:transparent; color:var(--green); border:1px solid var(--green); border-radius:9999px; font-size:11px; letter-spacing:1px; font-family:var(--mono); cursor:pointer; flex-shrink:0; }
-    .assign-btn:active { background:rgba(74,222,128,0.15); }
-    .assign-btn.clear { color:#fca5a5; border-color:#7f1d1d; }
-    .assign-btn.clear:active { background:rgba(252,165,165,0.1); }
-
-    /* Sign-in mock */
-    .signin-card { background:var(--panel-deep); border:1px solid #1f5d3a; border-radius:10px; padding:14px; }
-    .signin-card.signed-in { border-color: var(--green); }
-    .signin-card .signin-status { color:#aaa; font-size:12px; font-family:var(--mono); }
-    .signin-card.signed-in .signin-status { color:var(--green); }
 
     /* Settings modal */
     .settings-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px; }
@@ -420,6 +426,12 @@
     .scan-edges path { fill:none; stroke:var(--green); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
     .scan-edges.draw path { animation: dash 2s ease-out forwards; }
     @keyframes dash { to { stroke-dashoffset:0; } }
+
+    /* Tetris/Petalis overlay (loads tetris.html in iframe) */
+    .tetris-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:#000; z-index:1200; }
+    .tetris-overlay.show { display:block; }
+    .tetris-overlay iframe { width:100%; height:100%; border:none; display:block; }
+    .tetris-close { position:absolute; top:14px; right:14px; width:38px; height:38px; padding:0; margin:0; background:rgba(0,0,0,0.7); color:#fff; border:1px solid rgba(255,255,255,0.4); border-radius:50%; font-size:24px; line-height:1; z-index:3; }
 
     /* Chat — now a full-screen overlay opened from settings */
     .chat-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:var(--dark); z-index:1100; flex-direction:column; }
@@ -1961,6 +1973,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       document.getElementById('setting-apikey').value = AI_CONFIG.apiKey();
       document.getElementById('setting-vision').value = AI_CONFIG.visionModel;
       document.getElementById('setting-chat').value   = AI_CONFIG.chatModel;
+      refreshExportCount();
       document.getElementById('settings-modal').classList.add('show');
     }
     function closeSettings() {
@@ -2081,107 +2094,92 @@ ${summary}`;
 
     function renderProfile() {
       const p = getProfile();
-      const nameInput = document.getElementById('profile-name-input');
-      if (nameInput) {
-        nameInput.value = p.name || '';
-        const color = NAME_COLORS.find(c => c.id === p.colorId) || NAME_COLORS[0];
-        nameInput.style.color = color.hex;
-      }
 
-      // Color swatches
-      const swatches = document.getElementById('color-swatches');
-      if (swatches) {
-        swatches.innerHTML = NAME_COLORS.map(c =>
-          `<div class="color-swatch ${p.colorId === c.id ? 'selected' : ''}" style="background:${c.hex};" onclick="selectColor('${c.id}')"></div>`
-        ).join('');
-      }
-
-      // Avatar grid
-      const grid = document.getElementById('avatar-grid');
-      if (grid) {
-        const optionsHtml = DEFAULT_AVATARS.map(av =>
-          `<div class="avatar-option ${p.avatarId === av.id && !p.avatarUrl ? 'selected' : ''}" onclick="selectAvatar('${av.id}')">${av.svg}</div>`
-        ).join('');
-        // Custom uploaded avatar
-        const customHtml = p.avatarUrl
-          ? `<div class="avatar-option ${p.avatarUrl ? 'selected' : ''}" onclick="selectCustomAvatar()"><img src="${p.avatarUrl}"></div>`
-          : '';
-        // Upload slot
-        const uploadHtml = `<div class="avatar-option upload" onclick="document.getElementById('avatar-upload').click()">+</div>`;
-        grid.innerHTML = optionsHtml + customHtml + uploadHtml + `<input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">`;
-      }
-
-      // Top 3 slots
-      const topThreeEl = document.getElementById('top-three-slots');
-      if (topThreeEl) {
-        topThreeEl.innerHTML = (p.topThree || [null, null, null]).map((flowerId, i) => {
-          const f = flowerId ? flowers.find(x => x.id === flowerId) : null;
-          if (f) {
-            return `
-              <div class="pick-row filled">
-                <span class="slot-label">#${i+1}</span>
-                <img src="${f.photo}" class="slot-thumb">
-                <span class="slot-name">${escapeHtml(titleCase(f.common))}</span>
-                <button class="assign-btn" onclick="pickTopFlower(${i})">CHANGE</button>
-                <button class="assign-btn clear" onclick="clearTopFlower(${i})">×</button>
-              </div>`;
-          }
-          return `
-            <div class="pick-row">
-              <span class="slot-label">#${i+1}</span>
-              <span class="slot-empty">Empty slot</span>
-              <button class="assign-btn" onclick="pickTopFlower(${i})">ASSIGN</button>
-            </div>`;
-        }).join('');
-      }
-
-      // Top achievement slot — same button-driven pattern
-      const topAchEl = document.getElementById('top-ach-slot');
-      if (topAchEl) {
-        const ach = p.topAch ? ACHIEVEMENTS.find(a => a.id === p.topAch) : null;
-        if (ach) {
-          topAchEl.innerHTML = `
-            <div class="pick-row filled">
-              <span class="slot-icon">${ach.icon}</span>
-              <span class="slot-name">${escapeHtml(ach.name)}</span>
-              <button class="assign-btn" onclick="pickTopAchievement()">CHANGE</button>
-              <button class="assign-btn clear" onclick="clearTopAchievement()">×</button>
-            </div>`;
+      // Top row: avatar
+      const avatarEl = document.getElementById('prof-avatar');
+      if (avatarEl) {
+        if (p.avatarUrl) {
+          avatarEl.innerHTML = `<img src="${p.avatarUrl}" alt="avatar">`;
         } else {
-          topAchEl.innerHTML = `
-            <div class="pick-row">
-              <span class="slot-empty">No achievement featured</span>
-              <button class="assign-btn" onclick="pickTopAchievement()">ASSIGN</button>
-            </div>`;
+          const av = DEFAULT_AVATARS.find(a => a.id === p.avatarId) || DEFAULT_AVATARS[0];
+          avatarEl.innerHTML = av.svg;
         }
       }
 
-      // Sign-in mock
-      const signinEl = document.getElementById('signin-card');
-      if (signinEl) {
-        if (p.signedIn) {
-          signinEl.className = 'signin-card signed-in';
-          signinEl.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-weight:bold;">Signed in as <span style="color:var(--green);">${escapeHtml(p.email || 'naturalist@flowerdex.local')}</span></div>
-                <div class="signin-status">SESSION ACTIVE · LOCAL ONLY</div>
-              </div>
-              <button onclick="mockSignOut()" style="background:transparent; color:#fca5a5; border:1px solid #7f1d1d; width:auto; padding:6px 14px; margin:0; font-size:12px;">Sign Out</button>
-            </div>`;
+      // Top row: name input — color-tinted to match the chosen color
+      const nameInput = document.getElementById('prof-name-input');
+      if (nameInput && document.activeElement !== nameInput) {
+        nameInput.value = p.name || '';
+      }
+      const color = NAME_COLORS.find(c => c.id === p.colorId) || NAME_COLORS[0];
+      if (nameInput) nameInput.style.color = color.hex;
+
+      // Top row: color swatch button (current color)
+      const swatchBtn = document.getElementById('prof-color-swatch');
+      if (swatchBtn) swatchBtn.style.background = color.hex;
+
+      // Color popover options
+      const popover = document.getElementById('prof-color-popover');
+      if (popover) {
+        popover.innerHTML = NAME_COLORS.map(c =>
+          `<div class="opt ${p.colorId === c.id ? 'selected' : ''}" style="background:${c.hex};" onclick="selectColor('${c.id}'); event.stopPropagation();"></div>`
+        ).join('');
+      }
+
+      // Middle: 3 achievement orbs
+      const tta = p.topThreeAch || [p.topAch || null, null, null];
+      for (let i = 0; i < 3; i++) {
+        const orb = document.getElementById('prof-orb-' + i);
+        if (!orb) continue;
+        const achId = tta[i];
+        const ach = achId ? ACHIEVEMENTS.find(a => a.id === achId) : null;
+        if (ach) {
+          orb.className = 'prof-orb filled';
+          orb.title = ach.name;
+          orb.innerHTML = ach.icon || '🏅';
         } else {
-          signinEl.className = 'signin-card';
-          signinEl.innerHTML = `
-            <div class="signin-status">NOT SIGNED IN</div>
-            <p style="color:#aaa; font-size:13px; margin:6px 0 10px;">FlowerDex is local-first — sign-in is just for show. Nothing leaves your device.</p>
-            <button onclick="mockSignIn()" style="margin:0;">Sign In</button>`;
+          orb.className = 'prof-orb';
+          orb.title = 'Tap to choose an unlocked achievement';
+          orb.innerHTML = '+';
+          orb.style.color = '#666';
+        }
+      }
+
+      // Middle: favorite pic (reuses topThree[0] from old model for backward compat)
+      const favEl = document.getElementById('prof-favpic');
+      if (favEl) {
+        const favId = (p.topThree && p.topThree[0]) || p.favoritePicId || null;
+        const fav = favId ? flowers.find(x => x.id === favId) : null;
+        const editBtn = favEl.querySelector('.prof-favpic-edit');
+        const editBtnHtml = editBtn ? editBtn.outerHTML : '';
+        if (fav) {
+          favEl.className = 'prof-favpic filled';
+          favEl.innerHTML = editBtnHtml + `<img src="${fav.photo}" alt="favorite" onclick="showFavoritePicLarge()">`;
+        } else {
+          favEl.className = 'prof-favpic';
+          favEl.innerHTML = editBtnHtml + `<div class="placeholder">Tap pencil to choose<br>a favorite picture</div>`;
+        }
+      }
+
+      // Bottom: sign-in button
+      const signinBtn = document.getElementById('prof-signin-btn');
+      if (signinBtn) {
+        if (p.signedIn) {
+          signinBtn.className = 'prof-signin-btn signed-in';
+          signinBtn.textContent = 'Sign Out';
+        } else {
+          signinBtn.className = 'prof-signin-btn';
+          signinBtn.textContent = 'Sign In';
         }
       }
     }
 
-    function updateProfileName(value) {
+    /* Name input — commit on blur or Enter (saves silently while typing too) */
+    function commitProfileName() {
+      const input = document.getElementById('prof-name-input');
+      if (!input) return;
       const p = getProfile();
-      p.name = value || 'Naturalist';
+      p.name = (input.value || '').trim() || 'Naturalist';
       saveProfile(p);
     }
 
@@ -2189,19 +2187,60 @@ ${summary}`;
       const p = getProfile();
       p.colorId = colorId;
       saveProfile(p);
+      // Close popover after pick
+      const pop = document.getElementById('prof-color-popover');
+      if (pop) pop.classList.remove('show');
       renderProfile();
+    }
+
+    function toggleColorPopover(event) {
+      event?.stopPropagation();
+      const pop = document.getElementById('prof-color-popover');
+      if (!pop) return;
+      pop.classList.toggle('show');
+      // Close when tapping elsewhere
+      if (pop.classList.contains('show')) {
+        const handler = (e) => {
+          if (!pop.contains(e.target) && e.target.id !== 'prof-color-swatch') {
+            pop.classList.remove('show');
+            document.removeEventListener('click', handler);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', handler), 0);
+      }
+    }
+
+    /* Avatar — opens sub-modal with the grid of defaults + upload */
+    function openAvatarPicker() {
+      const p = getProfile();
+      const optionsHtml = DEFAULT_AVATARS.map(av =>
+        `<div class="avatar-option ${p.avatarId === av.id && !p.avatarUrl ? 'selected' : ''}" onclick="selectAvatar('${av.id}')">${av.svg}</div>`
+      ).join('');
+      const customHtml = p.avatarUrl
+        ? `<div class="avatar-option selected" onclick="hideModal()"><img src="${p.avatarUrl}"></div>`
+        : '';
+      const uploadHtml = `<div class="avatar-option upload" onclick="document.getElementById('avatar-upload-input').click()">+</div>`;
+      const modalHTML = `
+        <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
+          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:380px;">
+            <h2 style="margin:0 0 14px; color:var(--green);">Choose Avatar</h2>
+            <div class="avatar-grid">${optionsHtml}${customHtml}${uploadHtml}</div>
+            <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+            <button onclick="hideModal()" style="margin-top:16px;">Close</button>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const modals = document.querySelectorAll('.modal');
+      modals[modals.length - 1].style.display = 'flex';
+      modals[modals.length - 1].style.zIndex = '1300';
     }
 
     function selectAvatar(avatarId) {
       const p = getProfile();
       p.avatarId = avatarId;
-      delete p.avatarUrl; // clear custom upload when picking a default
+      delete p.avatarUrl;
       saveProfile(p);
-      renderProfile();
-    }
-
-    function selectCustomAvatar() {
-      // Just confirms the existing custom — ensures it's selected
+      hideModal();
       renderProfile();
     }
 
@@ -2210,14 +2249,12 @@ ${summary}`;
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        // Resize the uploaded image to keep storage small
         const img = new Image();
         img.onload = () => {
           const SIZE = 200;
           const canvas = document.createElement('canvas');
           canvas.width = SIZE; canvas.height = SIZE;
           const ctx = canvas.getContext('2d');
-          // Center crop to square
           const minDim = Math.min(img.width, img.height);
           const sx = (img.width - minDim) / 2;
           const sy = (img.height - minDim) / 2;
@@ -2226,6 +2263,7 @@ ${summary}`;
           p.avatarUrl = canvas.toDataURL('image/jpeg', 0.85);
           delete p.avatarId;
           saveProfile(p);
+          hideModal();
           renderProfile();
         };
         img.src = e.target.result;
@@ -2233,10 +2271,18 @@ ${summary}`;
       reader.readAsDataURL(file);
     }
 
-    function mockSignIn() {
-      const email = prompt('Enter any email (mock — nothing is sent):', 'naturalist@flowerdex.local');
-      if (email === null) return;
+    /* Sign-in toggle (mock) */
+    function toggleMockSignIn() {
       const p = getProfile();
+      if (p.signedIn) {
+        p.signedIn = false;
+        delete p.email;
+        saveProfile(p);
+        renderProfile();
+        return;
+      }
+      const email = prompt('Enter any email (mock — nothing leaves your device):', 'naturalist@flowerdex.local');
+      if (email === null) return;
       p.signedIn = true;
       p.email = email.trim() || 'naturalist@flowerdex.local';
       saveProfile(p);
@@ -2244,22 +2290,68 @@ ${summary}`;
       showToast(`✅ Signed in as ${escapeHtml(p.email)}`);
     }
 
-    function mockSignOut() {
+    /* Achievement orb picker — slotIdx 0..2 */
+    async function pickProfileAchievement(slotIdx) {
+      const unlockedSet = new Set(await db.getItem('unlocked') || []);
+      const unlocked = ACHIEVEMENTS.filter(a => a.check(flowers) || unlockedSet.has(a.id));
+      if (unlocked.length === 0) {
+        showToast('Unlock an achievement first to feature it.', { duration: 3000 });
+        return;
+      }
       const p = getProfile();
-      p.signedIn = false;
-      delete p.email;
+      const current = p.topThreeAch || [p.topAch || null, null, null];
+      const rowsHtml = unlocked.map(a => {
+        const isSelected = current[slotIdx] === a.id;
+        return `
+          <div class="ach-item unlocked" onclick="assignProfileAchievement(${slotIdx}, '${a.id}')" style="cursor:pointer; ${isSelected ? 'background:#0a3d1f;' : ''}">
+            <span style="font-size:24px;">${a.icon}</span>
+            <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
+            <span class="ach-check">${isSelected ? '✓' : ''}</span>
+          </div>`;
+      }).join('');
+      const clearRow = current[slotIdx] ? `
+        <div class="ach-item" onclick="assignProfileAchievement(${slotIdx}, null)" style="cursor:pointer; color:#fca5a5;">
+          <span style="font-size:24px;">×</span>
+          <div class="ach-body"><strong>Clear this orb</strong></div>
+        </div>` : '';
+      const modalHTML = `
+        <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
+          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:420px;">
+            <h2 style="margin:0 0 14px; color:var(--green);">Achievement · Orb #${slotIdx+1}</h2>
+            <div style="text-align:left; max-height:55vh; overflow-y:auto;">${rowsHtml}${clearRow}</div>
+            <button onclick="hideModal()" style="margin-top:14px;">Cancel</button>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const modals = document.querySelectorAll('.modal');
+      modals[modals.length - 1].style.display = 'flex';
+      modals[modals.length - 1].style.zIndex = '1300';
+    }
+
+    function assignProfileAchievement(slotIdx, achId) {
+      const p = getProfile();
+      if (!p.topThreeAch) p.topThreeAch = [p.topAch || null, null, null];
+      // Prevent picking the same achievement in two slots
+      if (achId && p.topThreeAch.includes(achId)) {
+        const existingIdx = p.topThreeAch.indexOf(achId);
+        if (existingIdx !== slotIdx) p.topThreeAch[existingIdx] = null;
+      }
+      p.topThreeAch[slotIdx] = achId;
+      // Keep p.topAch in sync with slot 0 for any legacy reader
+      p.topAch = p.topThreeAch[0] || null;
       saveProfile(p);
+      hideModal();
       renderProfile();
     }
 
-    /* Top-3 picker — opens a modal listing collected flowers */
-    function pickTopFlower(slotIdx) {
+    /* Favorite picture — uses the same flower list */
+    function pickFavoritePic() {
       if (flowers.length === 0) {
-        showToast('Scan a flower first to feature it here.', { duration: 3000 });
+        showToast('Scan a flower first to feature one here.', { duration: 3000 });
         return;
       }
       const rowsHtml = flowers.map(f => `
-        <div class="species-row found" onclick="assignTopFlower(${slotIdx}, ${f.id})">
+        <div class="species-row found" onclick="assignFavoritePic(${f.id})">
           <img src="${f.photo}" style="width:40px; height:40px; object-fit:cover; border-radius:6px;">
           <div class="row-text" style="flex:1;">
             <span class="com">${escapeHtml(titleCase(f.common))}</span>
@@ -2269,7 +2361,7 @@ ${summary}`;
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
           <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:420px;">
-            <h2 style="margin:0 0 14px; color:var(--green);">Choose Specimen #${slotIdx+1}</h2>
+            <h2 style="margin:0 0 14px; color:var(--green);">Favorite Picture</h2>
             <div style="text-align:left; max-height:55vh; overflow-y:auto;">${rowsHtml}</div>
             <button onclick="hideModal()" style="margin-top:14px;">Cancel</button>
           </div>
@@ -2280,65 +2372,155 @@ ${summary}`;
       modals[modals.length - 1].style.zIndex = '1300';
     }
 
-    function assignTopFlower(slotIdx, flowerId) {
+    function assignFavoritePic(flowerId) {
       const p = getProfile();
       if (!p.topThree) p.topThree = [null, null, null];
-      p.topThree[slotIdx] = flowerId;
+      p.topThree[0] = flowerId;
+      p.favoritePicId = flowerId;
       saveProfile(p);
       hideModal();
       renderProfile();
-      showToast(`Assigned to slot #${slotIdx+1}`);
     }
 
-    function clearTopFlower(slotIdx) {
+    function showFavoritePicLarge() {
       const p = getProfile();
-      if (!p.topThree) return;
-      p.topThree[slotIdx] = null;
-      saveProfile(p);
-      renderProfile();
-    }
-
-    /* Top achievement picker — only shows unlocked ones */
-    async function pickTopAchievement() {
-      const unlockedSet = new Set(await db.getItem('unlocked') || []);
-      const unlocked = ACHIEVEMENTS.filter(a => a.check(flowers) || unlockedSet.has(a.id));
-      if (unlocked.length === 0) {
-        showToast('Unlock an achievement first to feature it.', { duration: 3000 });
-        return;
-      }
-      const rowsHtml = unlocked.map(a => `
-        <div class="ach-item unlocked" onclick="assignTopAchievement('${a.id}')" style="cursor:pointer;">
-          <span style="font-size:24px;">${a.icon}</span>
-          <div class="ach-body"><strong>${a.name}</strong><br><small>${a.desc}</small></div>
-          <span class="ach-check">✅</span>
-        </div>`).join('');
+      const favId = (p.topThree && p.topThree[0]) || p.favoritePicId || null;
+      const f = favId ? flowers.find(x => x.id === favId) : null;
+      if (!f) return;
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
-          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:440px;">
-            <h2 style="margin:0 0 14px; color:var(--green);">Featured Achievement</h2>
-            <div style="text-align:left; max-height:55vh; overflow-y:auto;">${rowsHtml}</div>
-            <button onclick="hideModal()" style="margin-top:14px;">Cancel</button>
+          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:420px; padding:0; background:transparent; border:none;">
+            <img src="${f.photo}" alt="${escapeHtml(titleCase(f.common))}" style="width:100%; max-height:70vh; object-fit:contain; border-radius:14px; display:block;">
+            <h3 style="color:white; text-align:center; margin:12px 0 0;">${escapeHtml(titleCase(f.common))}</h3>
+            <i style="color:var(--muted); display:block; text-align:center; margin:2px 0 14px; font-size:13px;">${escapeHtml(f.scientific)}</i>
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', modalHTML);
       const modals = document.querySelectorAll('.modal');
       modals[modals.length - 1].style.display = 'flex';
-      modals[modals.length - 1].style.zIndex = '1300';
+      modals[modals.length - 1].style.zIndex = '1400';
     }
 
-    function assignTopAchievement(achId) {
-      const p = getProfile();
-      p.topAch = achId;
-      saveProfile(p);
-      hideModal();
-      renderProfile();
+    /* ───────────────────────────────────────────────
+       BACKUP & RESTORE — export/import flowers + profile
+       to a JSON file so iOS Safari can't wipe months of
+       work with its 7-day storage cap.
+    ─────────────────────────────────────────────── */
+
+    function buildBackupBlob() {
+      const profile = getProfile();
+      const apiKey = localStorage.getItem('flowerdex_apikey') || null;
+      const visionModel = localStorage.getItem('flowerdex_vision_model') || null;
+      const chatModel   = localStorage.getItem('flowerdex_chat_model') || null;
+      const payload = {
+        app: 'FlowerDex',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        flowers,         // array of flower entries (including base64 photos)
+        profile,         // user profile object
+        settings: { apiKey, visionModel, chatModel },
+      };
+      return new Blob([JSON.stringify(payload)], { type: 'application/json' });
     }
 
-    function clearTopAchievement() {
-      const p = getProfile();
-      delete p.topAch;
-      saveProfile(p);
-      renderProfile();
+    function exportBackup() {
+      if (flowers.length === 0) {
+        if (!confirm('You have no scans yet. Export an empty backup anyway?')) return;
+      }
+      const blob = buildBackupBlob();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `flowerdex-backup-${dateStr}.json`;
+      const url = URL.createObjectURL(blob);
+      // Trigger a download via a hidden anchor — works in iOS Safari, gives a Files prompt
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Free the object URL after the download has had time to fire
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+      showToast(`✅ Backup downloaded · ${flowers.length} scans · ${sizeMB} MB`);
+    }
+
+    async function importBackup(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      // Reset input so picking the same file twice still fires onchange
+      event.target.value = '';
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data.app !== 'FlowerDex' || !Array.isArray(data.flowers)) {
+          throw new Error('Not a FlowerDex backup file.');
+        }
+
+        // Merge by id — imported flowers added unless an existing id collides
+        const existingIds = new Set(flowers.map(f => f.id));
+        const incoming = data.flowers.filter(f => f && typeof f.id !== 'undefined');
+        const newOnes = incoming.filter(f => !existingIds.has(f.id));
+        const dupes   = incoming.length - newOnes.length;
+
+        let merged = flowers.concat(newOnes);
+        // Sort newest first to keep collection order stable
+        merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        // Confirm if dupes were skipped — silent for clean import
+        const summary = `Import ${newOnes.length} flower${newOnes.length === 1 ? '' : 's'}?` +
+          (dupes > 0 ? `\n${dupes} already in your collection (will be skipped).` : '') +
+          (data.profile ? '\n\nThis will also replace your profile (name, avatar, color, achievements).' : '');
+        if (!confirm(summary)) return;
+
+        flowers = merged;
+        await db.setItem('flowers', flowers);
+
+        // Restore profile if present (full replace — profile is small)
+        if (data.profile && typeof data.profile === 'object') {
+          saveProfile(data.profile);
+        }
+        // Restore settings if present — but DO NOT clobber an API key the user
+        // has already entered on this device unless the backup also has one.
+        if (data.settings) {
+          if (data.settings.apiKey) localStorage.setItem('flowerdex_apikey', data.settings.apiKey);
+          if (data.settings.visionModel) localStorage.setItem('flowerdex_vision_model', data.settings.visionModel);
+          if (data.settings.chatModel) localStorage.setItem('flowerdex_chat_model', data.settings.chatModel);
+        }
+
+        renderCollection();
+        showToast(`✅ Imported ${newOnes.length} flower${newOnes.length === 1 ? '' : 's'}` + (dupes > 0 ? ` · skipped ${dupes} duplicate${dupes === 1 ? '' : 's'}` : ''));
+      } catch (err) {
+        showToast(`⚠️ Import failed: ${err.message}`, { error: true, duration: 5000 });
+      }
+    }
+
+    /* Update the "Export" button label with the current flower count */
+    function refreshExportCount() {
+      const el = document.getElementById('export-count');
+      if (el) el.textContent = flowers.length ? `${flowers.length} scan${flowers.length === 1 ? '' : 's'}` : '';
+    }
+
+    /* ───────────────────────────────────────────────
+       TETRIS / PETALIS — opens the standalone tetris.html
+       as a full-screen iframe overlay. The game is its own
+       file in the repo so it can be edited independently.
+    ─────────────────────────────────────────────── */
+    function openTetris() {
+      closeSettings();
+      const overlay = document.getElementById('tetris-overlay');
+      const frame = document.getElementById('tetris-frame');
+      if (!overlay || !frame) return;
+      // Set src each time so the game restarts fresh on every open
+      frame.src = 'tetris.html?t=' + Date.now();
+      overlay.classList.add('show');
+    }
+
+    function closeTetris() {
+      const overlay = document.getElementById('tetris-overlay');
+      const frame = document.getElementById('tetris-frame');
+      if (overlay) overlay.classList.remove('show');
+      if (frame) frame.src = 'about:blank'; // stop the game loop
     }
 
     function openChatOverlay() {
@@ -2605,30 +2787,42 @@ ${summary}`;
 
   <!-- Profile modal -->
   <div id="profile-modal" class="profile-modal" onclick="if(event.target.id==='profile-modal')closeProfile()">
-    <div class="profile-content">
-      <h2>Profile</h2>
-
-      <div class="profile-section-title" style="border-top:none; padding-top:0; margin-top:0;">SIGN IN</div>
-      <div id="signin-card" class="signin-card">
-        <!-- populated by renderProfile() -->
+    <div class="profile-card" onclick="event.stopPropagation()">
+      <!-- Top row: avatar (left), name (center, tap-to-edit), color (right) -->
+      <div class="prof-top-row">
+        <div class="prof-avatar" onclick="openAvatarPicker()" id="prof-avatar">
+          <!-- populated by renderProfile -->
+        </div>
+        <div class="prof-name-wrap">
+          <input id="prof-name-input" class="prof-name" type="text" maxlength="20" placeholder="Name" onblur="commitProfileName()" onkeydown="if(event.key==='Enter')this.blur()">
+        </div>
+        <div class="prof-color-wrap">
+          <button class="prof-color-swatch" id="prof-color-swatch" onclick="toggleColorPopover(event)" aria-label="Pick name color"></button>
+          <div class="prof-color-popover" id="prof-color-popover"></div>
+        </div>
       </div>
 
-      <div class="profile-section-title">DISPLAY NAME</div>
-      <div class="name-input-row">
-        <input id="profile-name-input" type="text" maxlength="20" placeholder="Naturalist" oninput="updateProfileName(this.value)">
+      <!-- Middle: 3 achievement orbs (left) + favorite pic (right) -->
+      <div class="prof-middle-row">
+        <div class="prof-orbs">
+          <div class="prof-orb-label">Achievements</div>
+          <div class="prof-orb-row">
+            <div class="prof-orb" id="prof-orb-0" onclick="pickProfileAchievement(0)"></div>
+            <div class="prof-orb" id="prof-orb-1" onclick="pickProfileAchievement(1)"></div>
+            <div class="prof-orb" id="prof-orb-2" onclick="pickProfileAchievement(2)"></div>
+          </div>
+        </div>
+        <div class="prof-favpic" id="prof-favpic">
+          <button class="prof-favpic-edit" onclick="event.stopPropagation(); pickFavoritePic()" aria-label="Change favorite">✎</button>
+          <!-- content populated by renderProfile -->
+        </div>
       </div>
-      <div class="color-swatches" id="color-swatches"></div>
 
-      <div class="profile-section-title">AVATAR</div>
-      <div class="avatar-grid" id="avatar-grid"></div>
-
-      <div class="profile-section-title">TOP 3 SPECIMENS</div>
-      <div id="top-three-slots"></div>
-
-      <div class="profile-section-title">FEATURED ACHIEVEMENT</div>
-      <div id="top-ach-slot"></div>
-
-      <button onclick="closeProfile()" style="margin-top:24px;">Done</button>
+      <!-- Bottom: Sign-in button on the left -->
+      <div class="prof-bottom-row">
+        <button class="prof-signin-btn" id="prof-signin-btn" onclick="toggleMockSignIn()"></button>
+        <button class="prof-close-btn" onclick="closeProfile()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -2642,6 +2836,27 @@ ${summary}`;
         <span>Open Botanist AI</span>
         <span style="margin-left:auto; opacity:0.5;">→</span>
       </button>
+
+      <button onclick="openTetris()" class="settings-action-btn">
+        <span style="font-size:22px;">🌸</span>
+        <span>Play Petalis</span>
+        <span style="margin-left:auto; opacity:0.5;">→</span>
+      </button>
+
+      <div class="settings-section-divider">BACKUP &amp; RESTORE</div>
+
+      <p style="color:#aaa; font-size:12px; margin:0 0 12px;">iOS Safari can wipe app data after ~7 days. Export a backup occasionally — save it to Files, iCloud, or email it to yourself.</p>
+      <button onclick="exportBackup()" class="settings-action-btn">
+        <span style="font-size:20px;">📤</span>
+        <span>Export Backup</span>
+        <span id="export-count" style="margin-left:auto; opacity:0.5; font-family:var(--mono); font-size:11px;"></span>
+      </button>
+      <button onclick="document.getElementById('import-input').click()" class="settings-action-btn">
+        <span style="font-size:20px;">📥</span>
+        <span>Import Backup</span>
+        <span style="margin-left:auto; opacity:0.5;">→</span>
+      </button>
+      <input type="file" id="import-input" accept="application/json,.json" style="display:none;" onchange="importBackup(event)">
 
       <div class="settings-section-divider">API CONFIGURATION</div>
 
@@ -2670,6 +2885,12 @@ ${summary}`;
       <button onclick="saveSettings()">Save</button>
       <button onclick="closeSettings()" style="background:transparent; color:#aaa; border:1px solid #444;">Cancel</button>
     </div>
+  </div>
+
+  <!-- Tetris/Petalis overlay -->
+  <div id="tetris-overlay" class="tetris-overlay">
+    <button onclick="closeTetris()" class="tetris-close" aria-label="Close game">×</button>
+    <iframe id="tetris-frame" title="Petalis"></iframe>
   </div>
 
   <div id="loading-overlay" class="loading-overlay">
