@@ -6,7 +6,7 @@
   <title>FlowerDex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Lobster&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Pacifico&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --green: #4ade80; --dark: #052e16; --panel: #0f3d2a; --panel-deep: #0a2218; --muted: #86efac; --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace; --serif: 'Cormorant Garamond', Georgia, serif; }
     body { margin:0; font-family: system-ui, -apple-system, sans-serif; background:var(--dark); color:white; }
@@ -286,12 +286,12 @@
     .prof-close-btn { width:auto; margin:0 0 0 auto; padding:8px 18px; background:var(--green); color:var(--dark); border:none; border-radius:9999px; font-weight:bold; cursor:pointer; }
 
     /* Avatar picker — used by openAvatarPicker, lives in a sub-modal */
-    .avatar-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; }
-    .avatar-option { aspect-ratio:1/1; background:var(--panel-deep); border:2px solid transparent; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; transition: border-color 0.15s; }
+    .avatar-grid { display:grid; grid-template-columns:repeat(4, 60px); gap:10px; justify-content:center; padding:4px; }
+    .avatar-option { width:60px; height:60px; background:var(--panel-deep); border:2px solid transparent; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition: border-color 0.15s; box-sizing:border-box; overflow:hidden; }
     .avatar-option.selected { border-color:var(--green); box-shadow:0 0 10px rgba(74,222,128,0.4); }
-    .avatar-option svg { width:100%; height:100%; color:var(--green); }
-    .avatar-option img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-    .avatar-option.upload { color:#aaa; font-size:24px; }
+    .avatar-option svg { width:32px; height:32px; color:var(--green); display:block; }
+    .avatar-option img { width:100%; height:100%; object-fit:cover; }
+    .avatar-option.upload { color:#aaa; font-size:28px; line-height:1; }
 
     /* Settings modal */
     .settings-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:50px; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px; }
@@ -304,12 +304,12 @@
     .input-row small { display:block; color:#aaa; font-size:12px; margin-top:6px; line-height:1.4; }
     .settings-content button { width:100%; }
 
-    /* Splash screen — startup animation (~2.2s total, then fades) */
+    /* Splash screen — pastel pressed-flowers theme */
     .splash {
       position:fixed; inset:0; z-index:3000;
-      background: radial-gradient(ellipse at center, #d946a6 0%, #9d2671 55%, #4a1538 100%);
+      background: radial-gradient(ellipse at center, #fde6ed 0%, #fcd1de 40%, #f4b8c8 75%, #d99cb0 100%);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:28px;
+      gap:24px;
       transition: opacity 0.5s ease;
     }
     .splash.fade-out { opacity:0; pointer-events:none; }
@@ -319,76 +319,130 @@
        behind it can ever flash visible during initial paint. */
     body > *:not(#splash) { transition: opacity 0.5s ease; }
     body.splash-active > *:not(#splash) { visibility:hidden; opacity:0; }
-    /* Soft floral vignette + subtle texture (no more CRT scanlines on splash) */
+    /* Soft floral vignette + subtle texture */
     .splash::before {
       content:''; position:absolute; inset:0; pointer-events:none;
       background:
-        radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 40%),
-        radial-gradient(circle at 70% 80%, rgba(255,255,255,0.06) 0%, transparent 35%),
-        radial-gradient(circle at center, transparent 55%, rgba(0,0,0,0.35) 100%);
+        radial-gradient(circle at 25% 15%, rgba(255,255,255,0.5) 0%, transparent 35%),
+        radial-gradient(circle at 75% 85%, rgba(255,255,255,0.3) 0%, transparent 40%),
+        radial-gradient(circle at center, transparent 60%, rgba(165, 90, 120, 0.25) 100%);
     }
     .splash-svg { width:200px; height:220px; overflow:visible; position:relative; z-index:1; }
-    /* Origin + junction dots — soft cream so they glow against the magenta */
-    .splash .dot { fill: #fff5fb; filter: drop-shadow(0 0 8px rgba(255,255,255,0.7)); }
+    /* Origin + junction dots — soft rose so they glow against the pastel pink */
+    .splash .dot { fill: #b54772; filter: drop-shadow(0 0 6px rgba(181, 71, 114, 0.5)); }
     /* Stem + branches */
     .splash .stem, .splash .branch {
-      stroke: #fff5fb; stroke-width: 2.5; stroke-linecap: round;
-      filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+      stroke: #b54772; stroke-width: 2.2; stroke-linecap: round;
+      filter: drop-shadow(0 0 3px rgba(181, 71, 114, 0.4));
     }
     /* Flowers — start invisible, scale-bloom animation via CSS */
     .splash .flower {
       opacity:0;
       animation: bloom 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
-    .splash .flower-left  { animation-delay: 1.95s; }
-    .splash .flower-right { animation-delay: 2.10s; }
+    .splash .flower-left   { animation-delay: 1.95s; }
+    .splash .flower-right  { animation-delay: 2.10s; }
+    .splash .flower-middle { animation-delay: 2.30s; }
     @keyframes bloom {
       0%   { opacity:0; transform: scale(0)    rotate(-25deg); }
       60%  { opacity:1; transform: scale(1.15) rotate(5deg); }
       100% { opacity:1; transform: scale(1)    rotate(0deg); }
     }
-    /* White petals with golden center pop against the magenta backdrop */
-    .splash .petal { fill: #ffffff; stroke:#fce7f3; stroke-width:0.6; filter: drop-shadow(0 0 6px rgba(255,255,255,0.6)); }
+    /* Soft white petals with butter-yellow centers — pressed flower look */
+    .splash .petal { fill: #ffffff; stroke:#f8b8cc; stroke-width:0.6; filter: drop-shadow(0 1px 3px rgba(165,90,120,0.4)); }
     .splash .flower-center { fill:#fbbf24; }
 
-    /* Wordmark — Lobster script font, letters bounce in a wave */
+    /* Circle wreath that draws around all 3 flowers after they bloom */
+    .splash .wreath-circle {
+      fill:none; stroke:#b54772; stroke-width:1.6;
+      stroke-linecap:round;
+      stroke-dasharray:327;        /* circumference of r=52 circle ≈ 327 */
+      stroke-dashoffset:327;       /* start hidden */
+      transform: rotate(-90deg);   /* start drawing at top (12 o'clock) */
+      transform-origin: 100px 100px; /* match circle center (cx=100, cy=100) */
+      opacity:0.85;
+      animation: wreath-draw 1.1s cubic-bezier(0.4, 0, 0.2, 1) 2.65s forwards;
+      filter: drop-shadow(0 0 4px rgba(181, 71, 114, 0.35));
+    }
+    @keyframes wreath-draw {
+      to { stroke-dashoffset:0; }
+    }
+
+    /* Mascot — appears after wreath, then dances */
+    .splash-mascot {
+      width: 110px; height: 110px;
+      position: relative; z-index: 1;
+      opacity: 0;
+      animation:
+        mascot-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 3.8s forwards,
+        mascot-dance 1.4s ease-in-out 4.3s infinite;
+      filter: drop-shadow(0 4px 8px rgba(165, 90, 120, 0.25));
+    }
+    .splash-mascot svg { width: 100%; height: 100%; display: block; }
+    @keyframes mascot-in {
+      0%   { opacity: 0; transform: translateY(20px) scale(0.4); }
+      60%  { opacity: 1; transform: translateY(-4px) scale(1.1); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes mascot-dance {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      25%      { transform: translateY(-6px) rotate(2deg); }
+      50%      { transform: translateY(0) rotate(-2deg); }
+      75%      { transform: translateY(-4px) rotate(2deg); }
+    }
+    /* Right arm waves the flower — pivots around the shoulder (140, 130) */
+    .splash-mascot .mascot-arm-right {
+      transform-origin: 140px 130px;
+      animation: mascot-wave 0.9s ease-in-out 4.3s infinite;
+    }
+    @keyframes mascot-wave {
+      0%, 100% { transform: rotate(0deg); }
+      50%      { transform: rotate(-18deg); }
+    }
+    /* Leaves sway gently as the body bounces */
+    .splash-mascot .mascot-leaves {
+      transform-origin: 100px 80px;
+      animation: mascot-leaves-sway 1.4s ease-in-out 4.3s infinite;
+    }
+    @keyframes mascot-leaves-sway {
+      0%, 100% { transform: rotate(-1.5deg); }
+      50%      { transform: rotate(1.5deg); }
+    }
+
+    /* Wordmark — Pacifico script, refined small size */
     .splash-title {
-      font-family: 'Lobster', cursive;
-      color: #ffffff;
-      font-size: 56px;
+      font-family: 'Pacifico', cursive;
+      color: #b54772;
+      font-size: 22px;
       letter-spacing: 1px;
-      text-shadow: 0 4px 18px rgba(74,12,52,0.6), 0 0 20px rgba(255,255,255,0.3);
+      text-shadow: 0 2px 6px rgba(165,90,120,0.25);
       position:relative; z-index:1;
       opacity:0;
-      animation: title-fade-in 0.4s ease-out 2.45s forwards;
+      animation: title-fade-in 0.4s ease-out 4.6s forwards;
     }
     @keyframes title-fade-in { to { opacity:1; } }
     .splash-title span {
       display:inline-block;
       animation: letter-wave 0.6s ease-in-out 1 forwards;
     }
-    /* Each letter starts its bounce ~0.12s after the previous one,
-       beginning right after the title finishes fading in (2.85s). */
-    .splash-title span:nth-child(1) { animation-delay: 2.85s; }
-    .splash-title span:nth-child(2) { animation-delay: 2.97s; }
-    .splash-title span:nth-child(3) { animation-delay: 3.09s; }
-    .splash-title span:nth-child(4) { animation-delay: 3.21s; }
-    .splash-title span:nth-child(5) { animation-delay: 3.33s; }
-    .splash-title span:nth-child(6) { animation-delay: 3.45s; }
-    .splash-title span:nth-child(7) { animation-delay: 3.57s; }
-    .splash-title span:nth-child(8) { animation-delay: 3.69s; }
-    .splash-title span:nth-child(9) { animation-delay: 3.81s; }
-    .splash-title span:nth-child(10) { animation-delay: 3.93s; }
-    .splash-title span:nth-child(11) { animation-delay: 4.05s; }
-    .splash-title span:nth-child(12) { animation-delay: 4.17s; }
+    /* Letters bounce in sequence after wordmark fades in */
+    .splash-title span:nth-child(1) { animation-delay: 4.65s; }
+    .splash-title span:nth-child(2) { animation-delay: 4.77s; }
+    .splash-title span:nth-child(3) { animation-delay: 4.89s; }
+    .splash-title span:nth-child(4) { animation-delay: 5.01s; }
+    .splash-title span:nth-child(5) { animation-delay: 5.13s; }
+    .splash-title span:nth-child(6) { animation-delay: 5.25s; }
+    .splash-title span:nth-child(7) { animation-delay: 5.37s; }
+    .splash-title span:nth-child(8) { animation-delay: 5.49s; }
+    .splash-title span:nth-child(9) { animation-delay: 5.61s; }
     @keyframes letter-wave {
       0%, 100% { transform: translateY(0); }
-      50%      { transform: translateY(-12px); }
+      50%      { transform: translateY(-10px); }
     }
     .splash-tagline {
       font-family: 'Cormorant Garamond', serif;
-      color:#fce7f3; font-size:12px; letter-spacing:1.5px; opacity:0;
-      animation: tagline-in 0.5s ease-out 2.85s forwards;
+      color:#8a4763; font-size:11px; letter-spacing:1px; opacity:0;
+      animation: tagline-in 0.5s ease-out 5.65s forwards;
       position:relative; z-index:1;
       text-align:center; padding:0 20px; max-width:340px;
       font-weight:600; font-style:italic;
@@ -396,13 +450,13 @@
     @keyframes tagline-in { to { opacity:1; } }
     .splash-skip {
       position:absolute; bottom:30px; right:24px; z-index:2;
-      background:rgba(255,255,255,0.12); color:#ffffff;
-      border:1px solid rgba(255,255,255,0.4);
+      background:rgba(181,71,114,0.15); color:#b54772;
+      border:1px solid rgba(181,71,114,0.4);
       padding:8px 18px; font-family:var(--mono); font-size:11px; letter-spacing:2px;
       border-radius:9999px; width:auto; margin:0; cursor:pointer; opacity:0.8;
       animation: tagline-in 0.4s ease-out 1.0s forwards;
     }
-    .splash-skip:active { background:rgba(255,255,255,0.25); opacity:1; }
+    .splash-skip:active { background:rgba(181,71,114,0.3); opacity:1; }
 
     /* Loading overlay */
     .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1500; align-items:center; justify-content:center; flex-direction:column; gap:20px; }
@@ -994,9 +1048,6 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           <div class="hud-panel-header"><span>// COLLECTION ARCHIVE</span><span class="right">${flowers.length} ENTRIES · ${matched}/300 CATALOGED · ${matchPct}%</span></div>
         </div>`;
       const cardsHtml = flowers.map(f => {
-        const master = f.masterId ? MASTER_FLOWERS.find(m => m.id === f.masterId) : null;
-        const rarityClass = master ? 'rarity-' + master.rar.toLowerCase() : '';
-        const rarityLbl = master ? master.rar.toUpperCase() : 'UNKNOWN';
         const date = new Date(f.timestamp);
         const ts = date.toISOString().slice(0,10).replace(/-/g,'.');
         // Tags are tappable — opens the matching Logs drilldown.
@@ -1009,10 +1060,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           : '';
         const regionRow = f.region ? `<span class="lbl">REGION</span><span class="val">${escapeHtml(f.region)}</span>` : '';
         return `
-          <div class="card hud-card ${rarityClass}" onclick="showDetail(${f.id})">
-            <div class="card-meta">
-              <span class="rarity-tag">${rarityLbl}</span>
-            </div>
+          <div class="card hud-card" onclick="showDetail(${f.id})">
             <div class="card-body">
               <div class="card-text">
                 <h3>${escapeHtml(titleCase(f.common))}</h3>
@@ -1038,9 +1086,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
       const ts = new Date(flower.timestamp);
       const tsStr = ts.toISOString().slice(0, 10).replace(/-/g, '.');
 
-      const dexNum = master ? master.id : '???/???';
-      const rarityStr = master ? master.rar.toUpperCase() : 'UNKNOWN';
-      const rarityClass = master ? master.rar.toLowerCase() : 'common';
+      const dexNum = master ? master.id : '???';
 
       // Tags row — biome / family / native badge if applicable
       const tags = [];
@@ -1060,7 +1106,7 @@ If the image does not contain a flower, respond with: {"error":"not a flower"}`
           <div class="modal-content hud-modal" onclick="event.stopImmediatePropagation()">
             <div class="hud-modal-top">
               <span class="hud-modal-id">${escapeHtml(dexNum)}</span>
-              <span class="hud-modal-id rarity-line rarity-${rarityClass}" style="margin:0;">${rarityStr}</span>
+              <span class="hud-modal-id">${tsStr}</span>
             </div>
             <img src="${flower.photo}" alt="${escapeHtml(titleCase(flower.common))}" class="hud-modal-img">
             <div class="hud-modal-content">
@@ -2235,11 +2281,11 @@ ${summary}`;
       const uploadHtml = `<div class="avatar-option upload" onclick="document.getElementById('avatar-upload-input').click()">+</div>`;
       const modalHTML = `
         <div class="modal" onclick="if(event.target.classList.contains('modal'))hideModal()">
-          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:380px;">
+          <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:340px; text-align:center;">
             <h2 style="margin:0 0 14px; color:var(--green);">Choose Avatar</h2>
             <div class="avatar-grid">${optionsHtml}${customHtml}${uploadHtml}</div>
             <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
-            <button onclick="hideModal()" style="margin-top:16px;">Close</button>
+            <button onclick="hideModal()" class="hud-close-btn" style="margin-top:20px;">Close</button>
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -2675,10 +2721,10 @@ ${summary}`;
     function initSplash() {
       const splash = document.getElementById('splash');
       if (!splash) return;
-      // Splash plays every time the app opens — no session gate
-      // Wave finishes at ~4.41s (last letter starts 3.81s + 0.6s duration).
-      // Hold for ~0.6s after, then fade out.
-      setTimeout(dismissSplash, 5000);
+      // Full sequence: stem → 3 blooms → wreath traces (2.65–3.75s) →
+      // mascot enters (3.8s) and starts dancing (4.3s) → wordmark fades in
+      // and waves through (4.6s–6.2s) → tagline → hold, then fade.
+      setTimeout(dismissSplash, 6800);
     }
 
     if (document.readyState === 'loading') {
@@ -2732,30 +2778,35 @@ ${summary}`;
         <animate attributeName="r" from="0" to="5" begin="0.3s" dur="0.25s" fill="freeze"/>
       </circle>
 
-      <!-- Stem: line from origin dot up to junction dot -->
+      <!-- Stem: line from origin dot up to junction dot (30% shorter than before) -->
       <line class="stem" x1="100" y1="200" x2="100" y2="200">
-        <animate attributeName="y2" from="200" to="120" begin="0.6s" dur="0.5s" fill="freeze"/>
+        <animate attributeName="y2" from="200" to="144" begin="0.6s" dur="0.5s" fill="freeze"/>
       </line>
 
       <!-- Junction dot (top of stem) -->
-      <circle class="dot" cx="100" cy="120" r="0">
+      <circle class="dot" cx="100" cy="144" r="0">
         <animate attributeName="r" from="0" to="5" begin="1.15s" dur="0.2s" fill="freeze"/>
       </circle>
 
       <!-- Left branch: 45° up-left from junction -->
-      <line class="branch" x1="100" y1="120" x2="100" y2="120">
-        <animate attributeName="x2" from="100" to="55"  begin="1.4s" dur="0.45s" fill="freeze"/>
-        <animate attributeName="y2" from="120" to="75" begin="1.4s" dur="0.45s" fill="freeze"/>
+      <line class="branch" x1="100" y1="144" x2="100" y2="144">
+        <animate attributeName="x2" from="100" to="60"  begin="1.4s" dur="0.45s" fill="freeze"/>
+        <animate attributeName="y2" from="144" to="104" begin="1.4s" dur="0.45s" fill="freeze"/>
       </line>
 
       <!-- Right branch: 45° up-right from junction -->
-      <line class="branch" x1="100" y1="120" x2="100" y2="120">
-        <animate attributeName="x2" from="100" to="145" begin="1.4s" dur="0.45s" fill="freeze"/>
-        <animate attributeName="y2" from="120" to="75" begin="1.4s" dur="0.45s" fill="freeze"/>
+      <line class="branch" x1="100" y1="144" x2="100" y2="144">
+        <animate attributeName="x2" from="100" to="140" begin="1.4s" dur="0.45s" fill="freeze"/>
+        <animate attributeName="y2" from="144" to="104" begin="1.4s" dur="0.45s" fill="freeze"/>
       </line>
 
-      <!-- Left flower: outer translate + inner bloom (separated so they don't override each other) -->
-      <g transform="translate(55 75)">
+      <!-- Middle branch: short vertical up from junction (third bloom) -->
+      <line class="branch" x1="100" y1="144" x2="100" y2="144">
+        <animate attributeName="y2" from="144" to="88" begin="1.85s" dur="0.4s" fill="freeze"/>
+      </line>
+
+      <!-- Left flower -->
+      <g transform="translate(60 104)">
         <g class="flower flower-left">
           <ellipse class="petal" cx="0"   cy="-9"  rx="4" ry="7"/>
           <ellipse class="petal" cx="9"   cy="-3"  rx="4" ry="7" transform="rotate(72 9 -3)"/>
@@ -2766,8 +2817,8 @@ ${summary}`;
         </g>
       </g>
 
-      <!-- Right flower: same pattern -->
-      <g transform="translate(145 75)">
+      <!-- Right flower -->
+      <g transform="translate(140 104)">
         <g class="flower flower-right">
           <ellipse class="petal" cx="0"   cy="-9"  rx="4" ry="7"/>
           <ellipse class="petal" cx="9"   cy="-3"  rx="4" ry="7" transform="rotate(72 9 -3)"/>
@@ -2777,7 +2828,82 @@ ${summary}`;
           <circle class="flower-center" cx="0" cy="0" r="3"/>
         </g>
       </g>
+
+      <!-- Middle flower: above the junction dot -->
+      <g transform="translate(100 88)">
+        <g class="flower flower-middle">
+          <ellipse class="petal" cx="0"   cy="-9"  rx="4" ry="7"/>
+          <ellipse class="petal" cx="9"   cy="-3"  rx="4" ry="7" transform="rotate(72 9 -3)"/>
+          <ellipse class="petal" cx="6"   cy="8"   rx="4" ry="7" transform="rotate(144 6 8)"/>
+          <ellipse class="petal" cx="-6"  cy="8"   rx="4" ry="7" transform="rotate(216 -6 8)"/>
+          <ellipse class="petal" cx="-9"  cy="-3"  rx="4" ry="7" transform="rotate(288 -9 -3)"/>
+          <circle class="flower-center" cx="0" cy="0" r="3"/>
+        </g>
+      </g>
+
+      <!-- Wreath circle: encompasses all 3 flowers (centered at ~100,100; r=52) -->
+      <circle class="wreath-circle" cx="100" cy="100" r="52"/>
     </svg>
+
+    <!-- Mascot — dances in after wreath completes -->
+    <div class="splash-mascot" aria-hidden="true">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="splash-pot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b8d9b8"/><stop offset="100%" stop-color="#8bb78b"/>
+          </linearGradient>
+          <linearGradient id="splash-leaf" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a8d4a4"/><stop offset="100%" stop-color="#6fa66c"/>
+          </linearGradient>
+          <linearGradient id="splash-leafBack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7fb37c"/><stop offset="100%" stop-color="#558a55"/>
+          </linearGradient>
+        </defs>
+        <!-- Leaves group (sways subtly) -->
+        <g class="mascot-leaves">
+          <ellipse cx="70" cy="48" rx="14" ry="32" fill="url(#splash-leafBack)" transform="rotate(-32 70 48)"/>
+          <ellipse cx="130" cy="48" rx="14" ry="32" fill="url(#splash-leafBack)" transform="rotate(32 130 48)"/>
+          <ellipse cx="60" cy="60" rx="13" ry="28" fill="url(#splash-leafBack)" transform="rotate(-55 60 60)"/>
+          <ellipse cx="140" cy="60" rx="13" ry="28" fill="url(#splash-leafBack)" transform="rotate(55 140 60)"/>
+          <ellipse cx="82" cy="38" rx="13" ry="30" fill="url(#splash-leaf)" transform="rotate(-18 82 38)"/>
+          <ellipse cx="118" cy="38" rx="13" ry="30" fill="url(#splash-leaf)" transform="rotate(18 118 38)"/>
+          <ellipse cx="100" cy="32" rx="13" ry="34" fill="url(#splash-leaf)"/>
+          <ellipse cx="100" cy="38" rx="6" ry="20" fill="#c8e4c4" opacity="0.7"/>
+        </g>
+        <!-- Body / pot -->
+        <path d="M 60 95 Q 60 88 68 88 L 132 88 Q 140 88 140 95 L 138 158 Q 138 168 128 168 L 72 168 Q 62 168 62 158 Z" fill="url(#splash-pot)" stroke="#5c8a5c" stroke-width="1.5"/>
+        <path d="M 64 92 L 136 92" stroke="#c8e4c4" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <!-- Face -->
+        <ellipse cx="84" cy="122" rx="3.5" ry="4.5" fill="#2d4a2d"/>
+        <ellipse cx="116" cy="122" rx="3.5" ry="4.5" fill="#2d4a2d"/>
+        <circle cx="85.5" cy="120.5" r="1.2" fill="#fff"/>
+        <circle cx="117.5" cy="120.5" r="1.2" fill="#fff"/>
+        <path d="M 88 134 Q 100 144 112 134" stroke="#2d4a2d" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <ellipse cx="76" cy="135" rx="5" ry="3" fill="#f4a5b5" opacity="0.55"/>
+        <ellipse cx="124" cy="135" rx="5" ry="3" fill="#f4a5b5" opacity="0.55"/>
+        <!-- Left arm (static, resting) -->
+        <path d="M 60 130 Q 50 138 52 152" stroke="#7fb37c" stroke-width="6" stroke-linecap="round" fill="none"/>
+        <circle cx="52" cy="152" r="5" fill="#8bb78b"/>
+        <!-- Right arm (waves flower) — pivots around the shoulder so the flower swings -->
+        <g class="mascot-arm-right">
+          <path d="M 140 130 Q 158 122 168 108" stroke="#7fb37c" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <circle cx="168" cy="108" r="5" fill="#8bb78b"/>
+          <g transform="translate(170 96)">
+            <line x1="-2" y1="14" x2="-2" y2="22" stroke="#7fb37c" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="0" cy="-9" rx="6" ry="9" fill="#f7a8c0"/>
+            <ellipse cx="9" cy="-3" rx="6" ry="9" fill="#f7a8c0" transform="rotate(72 9 -3)"/>
+            <ellipse cx="6" cy="8"  rx="6" ry="9" fill="#f7a8c0" transform="rotate(144 6 8)"/>
+            <ellipse cx="-6" cy="8" rx="6" ry="9" fill="#f7a8c0" transform="rotate(216 -6 8)"/>
+            <ellipse cx="-9" cy="-3" rx="6" ry="9" fill="#f7a8c0" transform="rotate(288 -9 -3)"/>
+            <circle cx="0" cy="0" r="4" fill="#fbbf24"/>
+            <circle cx="-0.8" cy="-0.8" r="1.5" fill="#fef3c7"/>
+          </g>
+        </g>
+        <!-- Feet -->
+        <ellipse cx="82" cy="178" rx="9" ry="6" fill="#7fb37c"/>
+        <ellipse cx="118" cy="178" rx="9" ry="6" fill="#7fb37c"/>
+      </svg>
+    </div>
 
     <div class="splash-title">
       <span>F</span><span>l</span><span>o</span><span>w</span><span>e</span><span>r</span><span>D</span><span>e</span><span>x</span>
