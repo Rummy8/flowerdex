@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- FlowerDex mascot: succulent-pot character holding a flower -->
+  <defs>
+    <linearGradient id="pot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b8d9b8"/>
+      <stop offset="100%" stop-color="#8bb78b"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a8d4a4"/>
+      <stop offset="100%" stop-color="#6fa66c"/>
+    </linearGradient>
+    <linearGradient id="leafBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7fb37c"/>
+      <stop offset="100%" stop-color="#558a55"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Succulent leaves on top of the head — back layer first -->
+  <g id="leaves">
+    <!-- Back / outer leaves (darker) -->
+    <ellipse cx="70" cy="48" rx="14" ry="32" fill="url(#leafBack)" transform="rotate(-32 70 48)"/>
+    <ellipse cx="130" cy="48" rx="14" ry="32" fill="url(#leafBack)" transform="rotate(32 130 48)"/>
+    <ellipse cx="60" cy="60" rx="13" ry="28" fill="url(#leafBack)" transform="rotate(-55 60 60)"/>
+    <ellipse cx="140" cy="60" rx="13" ry="28" fill="url(#leafBack)" transform="rotate(55 140 60)"/>
+    <!-- Mid leaves -->
+    <ellipse cx="82" cy="38" rx="13" ry="30" fill="url(#leaf)" transform="rotate(-18 82 38)"/>
+    <ellipse cx="118" cy="38" rx="13" ry="30" fill="url(#leaf)" transform="rotate(18 118 38)"/>
+    <!-- Center leaf (front, brightest) -->
+    <ellipse cx="100" cy="32" rx="13" ry="34" fill="url(#leaf)"/>
+    <!-- Tiny center highlight leaf -->
+    <ellipse cx="100" cy="38" rx="6" ry="20" fill="#c8e4c4" opacity="0.7"/>
+  </g>
+
+  <!-- Pot / body — rounded square -->
+  <path id="body" d="M 60 95
+    Q 60 88 68 88
+    L 132 88
+    Q 140 88 140 95
+    L 138 158
+    Q 138 168 128 168
+    L 72 168
+    Q 62 168 62 158
+    Z" fill="url(#pot)" stroke="#5c8a5c" stroke-width="1.5"/>
+
+  <!-- Pot rim highlight -->
+  <path d="M 64 92 L 136 92" stroke="#c8e4c4" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Face -->
+  <g id="face">
+    <!-- Eyes -->
+    <ellipse cx="84" cy="122" rx="3.5" ry="4.5" fill="#2d4a2d"/>
+    <ellipse cx="116" cy="122" rx="3.5" ry="4.5" fill="#2d4a2d"/>
+    <!-- Eye shines -->
+    <circle cx="85.5" cy="120.5" r="1.2" fill="#fff"/>
+    <circle cx="117.5" cy="120.5" r="1.2" fill="#fff"/>
+    <!-- Smile -->
+    <path d="M 88 134 Q 100 144 112 134" stroke="#2d4a2d" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Cheek blush -->
+    <ellipse cx="76" cy="135" rx="5" ry="3" fill="#f4a5b5" opacity="0.55"/>
+    <ellipse cx="124" cy="135" rx="5" ry="3" fill="#f4a5b5" opacity="0.55"/>
+  </g>
+
+  <!-- Left arm (resting on pot side) -->
+  <g id="arm-left">
+    <path d="M 60 130 Q 50 138 52 152" stroke="#7fb37c" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <circle cx="52" cy="152" r="5" fill="#8bb78b"/>
+  </g>
+
+  <!-- Right arm (raised, holding flower) -->
+  <g id="arm-right">
+    <path d="M 140 130 Q 158 122 168 108" stroke="#7fb37c" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <circle cx="168" cy="108" r="5" fill="#8bb78b"/>
+  </g>
+
+  <!-- Pink flower being held -->
+  <g id="flower" transform="translate(170 96)">
+    <!-- Stem (tiny) -->
+    <line x1="-2" y1="14" x2="-2" y2="22" stroke="#7fb37c" stroke-width="2" stroke-linecap="round"/>
+    <!-- 5 petals -->
+    <ellipse cx="0" cy="-9" rx="6" ry="9" fill="#f7a8c0"/>
+    <ellipse cx="9" cy="-3" rx="6" ry="9" fill="#f7a8c0" transform="rotate(72 9 -3)"/>
+    <ellipse cx="6" cy="8"  rx="6" ry="9" fill="#f7a8c0" transform="rotate(144 6 8)"/>
+    <ellipse cx="-6" cy="8" rx="6" ry="9" fill="#f7a8c0" transform="rotate(216 -6 8)"/>
+    <ellipse cx="-9" cy="-3" rx="6" ry="9" fill="#f7a8c0" transform="rotate(288 -9 -3)"/>
+    <!-- Center -->
+    <circle cx="0" cy="0" r="4" fill="#fbbf24"/>
+    <circle cx="-0.8" cy="-0.8" r="1.5" fill="#fef3c7"/>
+  </g>
+
+  <!-- Feet -->
+  <ellipse cx="82" cy="178" rx="9" ry="6" fill="#7fb37c"/>
+  <ellipse cx="118" cy="178" rx="9" ry="6" fill="#7fb37c"/>
+</svg>
