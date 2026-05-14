@@ -2879,8 +2879,10 @@ ${summary}`;
       const overlay = document.getElementById('tetris-overlay');
       const frame = document.getElementById('tetris-frame');
       if (!overlay || !frame) return;
-      // Set src each time so the game restarts fresh on every open
-      frame.src = 'tetris.html?t=' + Date.now();
+      // Fixed version string for cache-busting so re-deploys force a refresh,
+      // but the browser CAN still cache between opens (don't use Date.now()
+      // — that defeats caching entirely).
+      frame.src = 'tetris.html?v=8';
       overlay.classList.add('show');
     }
 
@@ -3350,7 +3352,7 @@ ${summary}`;
   <!-- Tetris/Petalis overlay -->
   <div id="tetris-overlay" class="tetris-overlay">
     <button onclick="closeTetris()" class="tetris-close" aria-label="Close game">×</button>
-    <iframe id="tetris-frame" title="Petalis"></iframe>
+    <iframe id="tetris-frame" title="Petalis" sandbox="allow-scripts allow-same-origin"></iframe>
   </div>
 
   <div id="loading-overlay" class="loading-overlay">
